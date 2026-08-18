@@ -1,3 +1,4 @@
 .DS_Store
-Inventory.json
+inventory.json
 __pycache__/
+
