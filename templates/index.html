@@ -51,6 +51,34 @@
 
     </form>
 
+    <hr>
+
+<h2>Current Inventory</h2>
+
+{% if inventory %}
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Minimum Stock</th>
+            <th>Category</th>
+            <th>Location</th>
+        </tr>
+
+        {% for item_name, item in inventory.items() %}
+        <tr>
+            <td>{{ item_name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.minimum_stock }}</td>
+            <td>{{ item.category }}</td>
+            <td>{{ item.location }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No inventory items yet.</p>
+{% endif %}
+
     <script>
         function showAddForm() {
             document.getElementById("addForm").style.display = "block";

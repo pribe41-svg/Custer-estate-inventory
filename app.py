@@ -22,7 +22,8 @@ def save_inventory(inventory):
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    inventory = load_inventory()
+    return render_template("index.html", inventory=inventory)
 
 
 @app.route("/add", methods=["POST"])
