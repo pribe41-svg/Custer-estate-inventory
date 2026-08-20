@@ -173,6 +173,29 @@ def usage_report():
         usage_totals=totals
     )
 
+@app.route("/monthly-report")
+def monthly_report():
+    usage_log = load_usage_log()
+
+    month = request.args.get("month", "").strip()
+
+    monthly_totals = {}
+
+    if month:
+        for entry in usage_log:
+            if entry["date"].startswith(month):
+                item = entry["item"]
+                amount = entry["amount"]
+
+                monthly_totals[item] = monthly_totals.get(item, 0) + amount
+
+    return render_template(
+        "index.html",
+        inventory=load_inventory(),
+        monthly_totals=monthly_totals,
+        selected_month=month
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

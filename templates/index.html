@@ -16,6 +16,7 @@
     <button type="button" onclick="window.location.href='/low-stock'">Low Stock</button>
     <button type="button" onclick="window.location.href='/locations'">View Locations</button>
     <button type="button" onclick="window.location.href='/usage-report'">Usage Report</button>
+    <button type="button" onclick="window.location.href='/monthly-report'">Monthly Report</button>
 
     <br><br>
 
@@ -123,6 +124,53 @@
         </table>
     {% else %}
         <p>No usage recorded yet.</p>
+    {% endif %}
+{% endif %}
+
+{% if monthly_totals is defined %}
+    <h2>📅 Monthly Report</h2>
+
+    <form action="/monthly-report" method="GET">
+
+        <label for="month">Month:</label>
+
+        <input
+    type="text"
+    id="month"
+    name="month"
+    placeholder="YYYY-MM"
+    value="{{ selected_month }}"
+    pattern="[0-9]{4}-[0-9]{2}"
+    required
+>
+        >
+
+        <button type="submit">Run Report</button>
+
+    </form>
+
+    {% if selected_month %}
+
+        <h3>Usage for {{ selected_month }}</h3>
+
+        {% if monthly_totals %}
+            <table border="1" cellpadding="8">
+                <tr>
+                    <th>Item</th>
+                    <th>Total Used</th>
+                </tr>
+
+                {% for item, total in monthly_totals.items() %}
+                <tr>
+                    <td>{{ item }}</td>
+                    <td>{{ total }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No usage recorded for this month.</p>
+        {% endif %}
+
     {% endif %}
 {% endif %}
 
