@@ -12,7 +12,7 @@
 
     <button type="button" onclick="showAddForm()">Add Item</button>
     <button type="button" onclick="showUseForm()">Use Item</button>
-    <button type="button">Search Inventory</button>
+    <button type="button" onclick="window.location.href='/search'">Search Inventory</button>
     <button type="button" onclick="window.location.href='/low-stock'">Low Stock</button>
 
     <br><br>
@@ -127,6 +127,51 @@
 {% else %}
     <p>No inventory items yet.</p>
 {% endif %}
+{% if search_results is defined %}
+    <h2>🔎 Search Inventory</h2>
+
+    <form action="/search" method="GET" id="searchForm">
+
+        <input
+            type="text"
+            name="q"
+            placeholder="Search item or location"
+            value="{{ search_query }}"
+            required
+        >
+
+        <button type="submit">Search</button>
+
+    </form>
+
+    {% if search_query %}
+        <h3>Results for "{{ search_query }}"</h3>
+
+        {% if search_results %}
+            <table border="1" cellpadding="8">
+                <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Minimum Stock</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                </tr>
+
+                {% for item_name, item in search_results.items() %}
+                <tr>
+                    <td>{{ item_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.minimum_stock }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.location }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No matching items found.</p>
+        {% endif %}
+    {% endif %}
+{% endif %}
 
     <script>
     function showAddForm() {
@@ -139,6 +184,10 @@
 
     function showUseForm() {
         document.getElementById("useForm").style.display = "block";
+
+    function showSearchForm() {
+    document.getElementById("searchForm").style.display = "block";
+}
     }
 </script>
 

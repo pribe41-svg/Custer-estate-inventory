@@ -112,6 +112,29 @@ def low_stock():
         low_stock_items=low_stock_items
     )
 
+@app.route("/search")
+def search_inventory():
+    inventory = load_inventory()
+
+    query = request.args.get("q", "").strip().lower()
+
+    search_results = {}
+
+    if query:
+        for item_name, item in inventory.items():
+            if (
+                query in item_name.lower()
+                or query in item["location"].lower()
+            ):
+                search_results[item_name] = item
+
+    return render_template(
+        "index.html",
+        inventory=inventory,
+        search_results=search_results,
+        search_query=query
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
