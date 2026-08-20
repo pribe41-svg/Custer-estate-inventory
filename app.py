@@ -135,6 +135,26 @@ def search_inventory():
         search_query=query
     )
 
+@app.route("/locations")
+def view_locations():
+    inventory = load_inventory()
+
+    locations = {}
+
+    for item_name, item in inventory.items():
+        location = item["location"]
+
+        if location not in locations:
+            locations[location] = []
+
+        locations[location].append((item_name, item))
+
+    return render_template(
+        "index.html",
+        inventory=inventory,
+        locations=locations
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

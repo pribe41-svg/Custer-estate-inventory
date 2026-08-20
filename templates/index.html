@@ -14,6 +14,7 @@
     <button type="button" onclick="showUseForm()">Use Item</button>
     <button type="button" onclick="window.location.href='/search'">Search Inventory</button>
     <button type="button" onclick="window.location.href='/low-stock'">Low Stock</button>
+    <button type="button" onclick="window.location.href='/locations'">View Locations</button>
 
     <br><br>
 
@@ -171,6 +172,37 @@
             <p>No matching items found.</p>
         {% endif %}
     {% endif %}
+{% endif %}
+
+{% if locations is defined %}
+    <h2>📍 Inventory by Location</h2>
+
+    {% for location, items in locations.items() %}
+
+        <h3>{{ location }}</h3>
+
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Minimum Stock</th>
+                <th>Category</th>
+            </tr>
+
+            {% for item_name, item in items %}
+            <tr>
+                <td>{{ item_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.minimum_stock }}</td>
+                <td>{{ item.category }}</td>
+            </tr>
+            {% endfor %}
+
+        </table>
+
+        <br>
+
+    {% endfor %}
 {% endif %}
 
     <script>
