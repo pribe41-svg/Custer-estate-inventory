@@ -196,6 +196,21 @@ def monthly_report():
         selected_month=month
     )
 
+@app.route("/delete", methods=["POST"])
+def delete_item():
+    inventory = load_inventory()
+
+    item_name = request.form["deleteItem"]
+
+    if item_name not in inventory:
+        return "Item not found", 404
+
+    del inventory[item_name]
+
+    save_inventory(inventory)
+
+    return render_template("index.html", inventory=inventory)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
