@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import json
 import os
 from datetime import datetime
+import csv
 
 app = Flask(__name__)
 
@@ -210,6 +211,34 @@ def delete_item():
     save_inventory(inventory)
 
     return render_template("index.html", inventory=inventory)
+
+@app.route("/export-csv")
+def export_csv():
+    inventory = load_inventory()
+
+    filename = "inventory_export.csv"
+
+    with open(filename, "w", newline="") as file:
+        writer = csv.writer(file)
+
+        writer.writerow([
+            "Item",
+            "Quantity",
+            "Minimum Stock",
+            "Category",
+            "Location"
+        ])
+
+        for item_name, item in inventory.items():
+            writer.writerow([
+                item_name,
+                item["quantity"],
+                item["minimum_stock"],
+                item["category"],
+                item["location"]
+            ])
+
+    return send_file(filename, as_attachment=True)
 
 
 if __name__ == "__main__":
