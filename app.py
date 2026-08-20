@@ -1,12 +1,17 @@
 from flask import Flask, render_template, request
 import json
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 INVENTORY_FILE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "inventory.json"
+)
+USAGE_LOG_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "usage_log.json"
 )
 
 
@@ -22,6 +27,17 @@ def save_inventory(inventory):
     with open(INVENTORY_FILE, "w") as file:
         json.dump(inventory, file, indent=4)
 
+def load_usage_log():
+    if not os.path.exists(USAGE_LOG_FILE):
+        return []
+
+    with open(USAGE_LOG_FILE, "r") as file:
+        return json.load(file)
+
+
+def save_usage_log(usage_log):
+    with open(USAGE_LOG_FILE, "w") as file:
+        json.dump(usage_log, file, indent=4)
 
 @app.route("/")
 def home():
@@ -54,6 +70,7 @@ def add_item():
 @app.route("/use", methods=["POST"])
 def use_item():
     inventory = load_inventory()
+    usage_log = load_usage_log()
 
     item_name = request.form["useItem"]
     quantity_used = int(request.form["useQuantity"])
@@ -68,7 +85,14 @@ def use_item():
 
     inventory[item_name]["quantity"] = current_quantity - quantity_used
 
+    usage_log.append({
+        "item": item_name,
+        "amount": quantity_used,
+        "date": datetime.now().strftime("%Y-%m-%d")
+    })
+
     save_inventory(inventory)
+    save_usage_log(usage_log)
 
     return render_template("index.html", inventory=inventory)
 
