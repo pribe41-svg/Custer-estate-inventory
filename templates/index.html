@@ -13,7 +13,7 @@
     <button type="button" onclick="showAddForm()">Add Item</button>
     <button type="button" onclick="showUseForm()">Use Item</button>
     <button type="button">Search Inventory</button>
-    <button type="button">Low Stock</button>
+    <button type="button" onclick="window.location.href='/low-stock'">Low Stock</button>
 
     <br><br>
 
@@ -75,6 +75,32 @@
 </form>
 
     <hr>
+
+{% if low_stock_items is defined %}
+    <h2>⚠️ Low Stock Items</h2>
+
+    {% if low_stock_items %}
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Minimum Stock</th>
+                <th>Location</th>
+            </tr>
+
+            {% for item_name, item in low_stock_items.items() %}
+            <tr>
+                <td>{{ item_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.minimum_stock }}</td>
+                <td>{{ item.location }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>✅ No low stock items.</p>
+    {% endif %}
+{% endif %}    
 
 <h2>Current Inventory</h2>
 

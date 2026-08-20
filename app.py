@@ -96,6 +96,22 @@ def use_item():
 
     return render_template("index.html", inventory=inventory)
 
+@app.route("/low-stock")
+def low_stock():
+    inventory = load_inventory()
+
+    low_stock_items = {}
+
+    for item_name, item in inventory.items():
+        if item["quantity"] <= item["minimum_stock"]:
+            low_stock_items[item_name] = item
+
+    return render_template(
+        "index.html",
+        inventory=inventory,
+        low_stock_items=low_stock_items
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
