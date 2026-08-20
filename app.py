@@ -155,6 +155,24 @@ def view_locations():
         locations=locations
     )
 
+@app.route("/usage-report")
+def usage_report():
+    usage_log = load_usage_log()
+
+    totals = {}
+
+    for entry in usage_log:
+        item = entry["item"]
+        amount = entry["amount"]
+
+        totals[item] = totals.get(item, 0) + amount
+
+    return render_template(
+        "index.html",
+        inventory=load_inventory(),
+        usage_totals=totals
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
