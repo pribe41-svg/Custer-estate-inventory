@@ -4,7 +4,10 @@ import os
 
 app = Flask(__name__)
 
-INVENTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "inventory.json")
+INVENTORY_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "inventory.json"
+)
 
 
 def load_inventory():
@@ -45,7 +48,29 @@ def add_item():
 
     save_inventory(inventory)
 
-    return f"{item_name} saved successfully!"
+    return render_template("index.html", inventory=inventory)
+
+
+@app.route("/use", methods=["POST"])
+def use_item():
+    inventory = load_inventory()
+
+    item_name = request.form["useItem"]
+    quantity_used = int(request.form["useQuantity"])
+
+    if item_name not in inventory:
+        return "Item not found", 404
+
+    current_quantity = inventory[item_name]["quantity"]
+
+    if quantity_used > current_quantity:
+        return "You cannot use more than the current quantity.", 400
+
+    inventory[item_name]["quantity"] = current_quantity - quantity_used
+
+    save_inventory(inventory)
+
+    return render_template("index.html", inventory=inventory)
 
 
 if __name__ == "__main__":
