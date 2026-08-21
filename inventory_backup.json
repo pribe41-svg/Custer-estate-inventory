@@ -1,0 +1,8 @@
+{
+    "elbow": {
+        "quantity": 7,
+        "minimum_stock": 10,
+        "category": "plumbing",
+        "location": "shop"
+    }
+}
