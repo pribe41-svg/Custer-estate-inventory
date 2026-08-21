@@ -107,23 +107,28 @@ def add_item():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
-        INSERT INTO inventory
-        (name, quantity, minimum_stock, category, location)
-        VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (name)
-        DO UPDATE SET
-            quantity = EXCLUDED.quantity,
-            minimum_stock = EXCLUDED.minimum_stock,
-            category = EXCLUDED.category,
-            location = EXCLUDED.location
-    """, (
+    placeholder = "%s" if using_postgres() else "?"
+
+    cursor.execute(
+    f"""
+    INSERT INTO inventory
+    (name, quantity, minimum_stock, category, location)
+    VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+    ON CONFLICT (name)
+    DO UPDATE SET
+        quantity = EXCLUDED.quantity,
+        minimum_stock = EXCLUDED.minimum_stock,
+        category = EXCLUDED.category,
+        location = EXCLUDED.location
+    """,
+    (
         item_name,
         quantity,
         minimum_stock,
         category,
         location
-    ))
+    )
+)
 
     connection.commit()
     cursor.close()
