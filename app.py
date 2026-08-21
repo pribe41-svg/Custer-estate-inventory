@@ -101,6 +101,9 @@ def add_item():
     category = request.form["category"]
     location = request.form["location"]
 
+    print("DATABASE_URL detected:", bool(os.environ.get("DATABASE_URL")))
+    print("Using PostgreSQL:", using_postgres())
+
     connection = get_connection()
     cursor = connection.cursor()
 
