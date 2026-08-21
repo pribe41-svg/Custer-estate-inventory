@@ -147,21 +147,17 @@ def use_item():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
+    placeholder = "%s" if using_postgres() else "?"
+
+    # Find the item
+    cursor.execute(
+        f"""
         SELECT quantity
         FROM inventory
-        WHERE name = %s
-    """, (item_name,))
-
-    cursor.execute("""
-    INSERT INTO usage_log
-    (item_name, amount, date)
-    VALUES (%s, %s, %s)
-""", (
-    item_name,
-    quantity_used,
-    datetime.now().strftime("%Y-%m-%d")
-))
+        WHERE name = {placeholder}
+        """,
+        (item_name,)
+    )
 
     item = cursor.fetchone()
 
@@ -179,11 +175,29 @@ def use_item():
 
     new_quantity = current_quantity - quantity_used
 
-    cursor.execute("""
+    # Update inventory quantity
+    cursor.execute(
+        f"""
         UPDATE inventory
-        SET quantity = %s
-        WHERE name = %s
-    """, (new_quantity, item_name))
+        SET quantity = {placeholder}
+        WHERE name = {placeholder}
+        """,
+        (new_quantity, item_name)
+    )
+
+    # Record the usage
+    cursor.execute(
+        f"""
+        INSERT INTO usage_log
+        (item_name, amount, date)
+        VALUES ({placeholder}, {placeholder}, {placeholder})
+        """,
+        (
+            item_name,
+            quantity_used,
+            datetime.now().strftime("%Y-%m-%d")
+        )
+    )
 
     connection.commit()
 
@@ -293,11 +307,18 @@ def usage_report():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
-        SELECT item_name, amount, date
-        FROM usage_log
-        ORDER BY date DESC
-    """)
+    cursor.execute(
+    f"""
+    INSERT INTO usage_log
+    (item_name, amount, date)
+    VALUES ({placeholder}, {placeholder}, {placeholder})
+    """,
+    (
+        item_name,
+        quantity_used,
+        datetime.now().strftime("%Y-%m-%d")
+    )
+)
 
     rows = cursor.fetchall()
 
