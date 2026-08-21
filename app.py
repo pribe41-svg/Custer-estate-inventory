@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 import csv
-from database import get_connection, initialize_database
+from database import get_connection, initialize_database, using_postgres
 
 app = Flask(__name__)
 
@@ -204,19 +204,54 @@ def low_stock():
 
 @app.route("/search")
 def search_inventory():
-    inventory = load_inventory()
-
     query = request.args.get("q", "").strip().lower()
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    if using_postgres():
+        placeholder = "%s"
+    else:
+        placeholder = "?"
 
     search_results = {}
 
     if query:
-        for item_name, item in inventory.items():
-            if (
-                query in item_name.lower()
-                or query in item["location"].lower()
-            ):
-                search_results[item_name] = item
+        search_pattern = f"%{query}%"
+
+        cursor.execute(
+            f"""
+            SELECT name, quantity, minimum_stock, category, location
+            FROM inventory
+            WHERE LOWER(name) LIKE {placeholder}
+               OR LOWER(location) LIKE {placeholder}
+            ORDER BY name
+            """,
+            (search_pattern, search_pattern)
+        )
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            if using_postgres():
+                name, quantity, minimum_stock, category, location = row
+            else:
+                name = row["name"]
+                quantity = row["quantity"]
+                minimum_stock = row["minimum_stock"]
+                category = row["category"]
+                location = row["location"]
+
+            search_results[name] = {
+                "quantity": quantity,
+                "minimum_stock": minimum_stock,
+                "category": category,
+                "location": location
+            }
+
+    connection.close()
+
+    inventory = load_inventory_from_database()
 
     return render_template(
         "index.html",
@@ -325,10 +360,15 @@ def delete_item():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute("""
+    placeholder = "%s" if using_postgres() else "?"
+
+    cursor.execute(
+        f"""
         DELETE FROM inventory
-        WHERE name = %s
-    """, (item_name,))
+        WHERE name = {placeholder}
+        """,
+        (item_name,)
+    )
 
     connection.commit()
 
@@ -338,7 +378,6 @@ def delete_item():
     inventory = load_inventory_from_database()
 
     return render_template("index.html", inventory=inventory)
-
 
 @app.route("/export-csv")
 def export_csv():
