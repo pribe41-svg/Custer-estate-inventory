@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 import csv
+from database import get_connection, initialize_database
 
 app = Flask(__name__)
 
@@ -28,6 +29,29 @@ def save_inventory(inventory):
     with open(INVENTORY_FILE, "w") as file:
         json.dump(inventory, file, indent=4)
 
+def load_inventory_from_database():
+    connection = get_connection()
+
+    rows = connection.execute("""
+        SELECT name, quantity, minimum_stock, category, location
+        FROM inventory
+        ORDER BY name
+    """).fetchall()
+
+    connection.close()
+
+    inventory = {}
+
+    for row in rows:
+        inventory[row["name"]] = {
+            "quantity": row["quantity"],
+            "minimum_stock": row["minimum_stock"],
+            "category": row["category"],
+            "location": row["location"]
+        }
+
+    return inventory        
+
 def load_usage_log():
     if not os.path.exists(USAGE_LOG_FILE):
         return []
@@ -42,58 +66,74 @@ def save_usage_log(usage_log):
 
 @app.route("/")
 def home():
-    inventory = load_inventory()
+    inventory = load_inventory_from_database()
     return render_template("index.html", inventory=inventory)
-
 
 @app.route("/add", methods=["POST"])
 def add_item():
-    inventory = load_inventory()
-
     item_name = request.form["itemName"]
     quantity = int(request.form["quantity"])
     minimum_stock = int(request.form["minimumStock"])
     category = request.form["category"]
     location = request.form["location"]
 
-    inventory[item_name] = {
-        "quantity": quantity,
-        "minimum_stock": minimum_stock,
-        "category": category,
-        "location": location
-    }
+    connection = get_connection()
 
-    save_inventory(inventory)
+    connection.execute("""
+        INSERT INTO inventory
+        (name, quantity, minimum_stock, category, location)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        item_name,
+        quantity,
+        minimum_stock,
+        category,
+        location
+    ))
+
+    connection.commit()
+    connection.close()
+
+    inventory = load_inventory_from_database()
 
     return render_template("index.html", inventory=inventory)
 
 
 @app.route("/use", methods=["POST"])
 def use_item():
-    inventory = load_inventory()
-    usage_log = load_usage_log()
-
     item_name = request.form["useItem"]
     quantity_used = int(request.form["useQuantity"])
 
-    if item_name not in inventory:
+    connection = get_connection()
+
+    item = connection.execute("""
+        SELECT quantity
+        FROM inventory
+        WHERE name = ?
+    """, (item_name,)).fetchone()
+
+    if item is None:
+        connection.close()
         return "Item not found", 404
 
-    current_quantity = inventory[item_name]["quantity"]
+    current_quantity = item["quantity"]
 
     if quantity_used > current_quantity:
+        connection.close()
         return "You cannot use more than the current quantity.", 400
 
-    inventory[item_name]["quantity"] = current_quantity - quantity_used
+    new_quantity = current_quantity - quantity_used
 
-    usage_log.append({
-        "item": item_name,
-        "amount": quantity_used,
-        "date": datetime.now().strftime("%Y-%m-%d")
-    })
+    connection.execute("""
+        UPDATE inventory
+        SET quantity = ?
+        WHERE name = ?
+    """, (new_quantity, item_name))
 
-    save_inventory(inventory)
-    save_usage_log(usage_log)
+    connection.commit()
+    connection.close()
+
+    inventory = load_inventory_from_database()
 
     return render_template("index.html", inventory=inventory)
 
@@ -242,5 +282,7 @@ def export_csv():
 
 
 if __name__ == "__main__":
+    initialize_database()
+
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
