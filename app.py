@@ -31,6 +31,30 @@ def save_inventory(inventory):
 
 def load_inventory_from_database():
     connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT name, quantity, minimum_stock, category, location
+        FROM inventory
+        ORDER BY name
+    """)
+
+    rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    inventory = {}
+
+    for row in rows:
+        inventory[row[0]] = {
+            "quantity": row[1],
+            "minimum_stock": row[2],
+            "category": row[3],
+            "location": row[4]
+        }
+
+    return inventory
 
     rows = connection.execute("""
         SELECT name, quantity, minimum_stock, category, location
@@ -78,11 +102,18 @@ def add_item():
     location = request.form["location"]
 
     connection = get_connection()
+    cursor = connection.cursor()
 
-    connection.execute("""
+    cursor.execute("""
         INSERT INTO inventory
         (name, quantity, minimum_stock, category, location)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (name)
+        DO UPDATE SET
+            quantity = EXCLUDED.quantity,
+            minimum_stock = EXCLUDED.minimum_stock,
+            category = EXCLUDED.category,
+            location = EXCLUDED.location
     """, (
         item_name,
         quantity,
@@ -92,6 +123,7 @@ def add_item():
     ))
 
     connection.commit()
+    cursor.close()
     connection.close()
 
     inventory = load_inventory_from_database()
@@ -105,32 +137,49 @@ def use_item():
     quantity_used = int(request.form["useQuantity"])
 
     connection = get_connection()
+    cursor = connection.cursor()
 
-    item = connection.execute("""
+    cursor.execute("""
         SELECT quantity
         FROM inventory
-        WHERE name = ?
-    """, (item_name,)).fetchone()
+        WHERE name = %s
+    """, (item_name,))
+
+    cursor.execute("""
+    INSERT INTO usage_log
+    (item_name, amount, date)
+    VALUES (%s, %s, %s)
+""", (
+    item_name,
+    quantity_used,
+    datetime.now().strftime("%Y-%m-%d")
+))
+
+    item = cursor.fetchone()
 
     if item is None:
+        cursor.close()
         connection.close()
         return "Item not found", 404
 
-    current_quantity = item["quantity"]
+    current_quantity = item[0]
 
     if quantity_used > current_quantity:
+        cursor.close()
         connection.close()
         return "You cannot use more than the current quantity.", 400
 
     new_quantity = current_quantity - quantity_used
 
-    connection.execute("""
+    cursor.execute("""
         UPDATE inventory
-        SET quantity = ?
-        WHERE name = ?
+        SET quantity = %s
+        WHERE name = %s
     """, (new_quantity, item_name))
 
     connection.commit()
+
+    cursor.close()
     connection.close()
 
     inventory = load_inventory_from_database()
@@ -198,59 +247,98 @@ def view_locations():
 
 @app.route("/usage-report")
 def usage_report():
-    usage_log = load_usage_log()
+    connection = get_connection()
+    cursor = connection.cursor()
 
-    totals = {}
+    cursor.execute("""
+        SELECT item_name, amount, date
+        FROM usage_log
+        ORDER BY date DESC
+    """)
 
-    for entry in usage_log:
-        item = entry["item"]
-        amount = entry["amount"]
+    rows = cursor.fetchall()
 
-        totals[item] = totals.get(item, 0) + amount
+    cursor.close()
+    connection.close()
+
+    usage_log = []
+
+    for row in rows:
+        usage_log.append({
+            "item": row[0],
+            "quantity": row[1],
+            "date": row[2]
+        })
 
     return render_template(
-        "index.html",
-        inventory=load_inventory(),
-        usage_totals=totals
+        "usage_report.html",
+        usage_log=usage_log
     )
 
 @app.route("/monthly-report")
 def monthly_report():
-    usage_log = load_usage_log()
+    month = request.args.get("month")
 
-    month = request.args.get("month", "").strip()
-
-    monthly_totals = {}
+    connection = get_connection()
+    cursor = connection.cursor()
 
     if month:
-        for entry in usage_log:
-            if entry["date"].startswith(month):
-                item = entry["item"]
-                amount = entry["amount"]
+        cursor.execute("""
+            SELECT item_name, SUM(amount) AS total_used
+            FROM usage_log
+            WHERE date LIKE %s
+            GROUP BY item_name
+            ORDER BY item_name
+        """, (month + "%",))
+    else:
+        cursor.execute("""
+            SELECT item_name, SUM(amount) AS total_used
+            FROM usage_log
+            GROUP BY item_name
+            ORDER BY item_name
+        """)
 
-                monthly_totals[item] = monthly_totals.get(item, 0) + amount
+    rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    report = []
+
+    for row in rows:
+        report.append({
+            "item": row[0],
+            "quantity": row[1]
+        })
 
     return render_template(
-        "index.html",
-        inventory=load_inventory(),
-        monthly_totals=monthly_totals,
-        selected_month=month
+        "monthly_report.html",
+        report=report,
+        month=month
     )
+
 
 @app.route("/delete", methods=["POST"])
 def delete_item():
-    inventory = load_inventory()
-
     item_name = request.form["deleteItem"]
 
-    if item_name not in inventory:
-        return "Item not found", 404
+    connection = get_connection()
+    cursor = connection.cursor()
 
-    del inventory[item_name]
+    cursor.execute("""
+        DELETE FROM inventory
+        WHERE name = %s
+    """, (item_name,))
 
-    save_inventory(inventory)
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    inventory = load_inventory_from_database()
 
     return render_template("index.html", inventory=inventory)
+
 
 @app.route("/export-csv")
 def export_csv():

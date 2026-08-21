@@ -1,24 +1,24 @@
-import sqlite3
 import os
-
-DATABASE_FILE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "inventory.db"
-)
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 def get_connection():
-    connection = sqlite3.connect(DATABASE_FILE)
-    connection.row_factory = sqlite3.Row
-    return connection
+    database_url = os.environ.get("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not set")
+
+    return psycopg2.connect(database_url)
 
 
 def initialize_database():
     connection = get_connection()
+    cursor = connection.cursor()
 
-    connection.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS inventory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL,
             quantity INTEGER NOT NULL,
             minimum_stock INTEGER NOT NULL,
@@ -27,9 +27,9 @@ def initialize_database():
         )
     """)
 
-    connection.execute("""
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS usage_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             item_name TEXT NOT NULL,
             amount INTEGER NOT NULL,
             date TEXT NOT NULL
@@ -37,7 +37,9 @@ def initialize_database():
     """)
 
     connection.commit()
+    cursor.close()
     connection.close()
+
 
 def migrate_inventory():
     import json
@@ -55,12 +57,14 @@ def migrate_inventory():
         inventory = json.load(file)
 
     connection = get_connection()
+    cursor = connection.cursor()
 
     for item_name, item in inventory.items():
-        connection.execute("""
-            INSERT OR IGNORE INTO inventory
+        cursor.execute("""
+            INSERT INTO inventory
             (name, quantity, minimum_stock, category, location)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (name) DO NOTHING
         """, (
             item_name,
             item.get("quantity", 0),
@@ -70,23 +74,13 @@ def migrate_inventory():
         ))
 
     connection.commit()
+    cursor.close()
     connection.close()
 
-    print("Inventory migration complete.")   
+    print("Inventory migration complete.")
+
 
 if __name__ == "__main__":
     initialize_database()
     migrate_inventory()
-
-    connection = get_connection()
-
-    rows = connection.execute(
-        "SELECT * FROM inventory"
-    ).fetchall()
-
-    print("Items in database:", len(rows))
-
-    for row in rows:
-        print(dict(row))
-
-    connection.close()
+    print("Database initialized successfully.")
