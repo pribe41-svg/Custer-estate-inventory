@@ -293,7 +293,7 @@ def search_inventory():
 
 @app.route("/locations")
 def view_locations():
-    inventory = load_inventory()
+    inventory = load_inventory_from_database()
 
     locations = {}
 
