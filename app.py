@@ -124,6 +124,66 @@ def add_item():
         inventory=inventory
     )
 
+# ============================================================
+# ADD STOCK
+# ============================================================
+
+@app.route("/add-stock", methods=["POST"])
+def add_stock():
+
+    item_name = request.form["stockItem"]
+    quantity_added = int(request.form["stockQuantity"])
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    placeholder = "%s" if using_postgres() else "?"
+
+    # Get current quantity
+    cursor.execute(
+        f"""
+        SELECT quantity
+        FROM inventory
+        WHERE name = {placeholder}
+        """,
+        (item_name,)
+    )
+
+    item = cursor.fetchone()
+
+    if item is None:
+        cursor.close()
+        connection.close()
+        return "Item not found", 404
+
+    current_quantity = item[0]
+    new_quantity = current_quantity + quantity_added
+
+    # Add the new stock to the existing quantity
+    cursor.execute(
+        f"""
+        UPDATE inventory
+        SET quantity = {placeholder}
+        WHERE name = {placeholder}
+        """,
+        (
+            new_quantity,
+            item_name
+        )
+    )
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    inventory = load_inventory_from_database()
+
+    return render_template(
+        "index.html",
+        inventory=inventory
+    )
+
 
 # ============================================================
 # USE ITEM
