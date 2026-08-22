@@ -223,6 +223,60 @@ def add_stock():
         inventory=inventory
     )
 
+# ============================================================
+# EDIT ITEM
+# ============================================================
+
+@app.route("/edit-item", methods=["POST"])
+def edit_item():
+
+    original_name = request.form["originalName"]
+
+    item_name = request.form["itemName"]
+    quantity = int(request.form["quantity"])
+    minimum_stock = int(request.form["minimumStock"])
+    category = request.form["category"]
+    location = request.form["location"]
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    placeholder = "%s" if using_postgres() else "?"
+
+    # Update the existing inventory item
+    cursor.execute(
+        f"""
+        UPDATE inventory
+        SET
+            name = {placeholder},
+            quantity = {placeholder},
+            minimum_stock = {placeholder},
+            category = {placeholder},
+            location = {placeholder}
+        WHERE name = {placeholder}
+        """,
+        (
+            item_name,
+            quantity,
+            minimum_stock,
+            category,
+            location,
+            original_name
+        )
+    )
+
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
+    inventory = load_inventory_from_database()
+
+    return render_template(
+        "index.html",
+        inventory=inventory
+    )
+
 
 # ============================================================
 # USE ITEM

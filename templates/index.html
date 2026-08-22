@@ -60,6 +60,7 @@
         }
 
         .search-results {
+            position: relative;
             margin-top: -8px;
             margin-bottom: 10px;
         }
@@ -69,24 +70,15 @@
             width: 100%;
             text-align: left;
             background: white;
-            color: #222;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            margin: 3px 0;
+            border-radius: 4px;
+            margin: 2px 0;
             padding: 10px;
             cursor: pointer;
         }
 
         .search-result:hover {
             background: #eee;
-        }
-
-        .selected-item {
-            padding: 10px;
-            margin-bottom: 12px;
-            background: #eee;
-            border-radius: 6px;
-            font-weight: bold;
         }
 
         .primary {
@@ -242,11 +234,7 @@
 
         <h2>Use Item</h2>
 
-        <form
-            action="/use"
-            method="POST"
-            id="useForm"
-        >
+        <form action="/use" method="POST">
 
             <label for="useSearch">
                 Search for Item
@@ -264,16 +252,11 @@
                 class="search-results"
             ></div>
 
-            <div
-                id="useSelected"
-                class="selected-item"
-                style="display: none;"
-            ></div>
-
             <input
                 type="hidden"
                 id="useItem"
                 name="useItem"
+                required
             >
 
             <label for="useQuantity">
@@ -308,11 +291,7 @@
 
         <h2>Add Stock</h2>
 
-        <form
-            action="/add-stock"
-            method="POST"
-            id="stockForm"
-        >
+        <form action="/add-stock" method="POST">
 
             <label for="stockSearch">
                 Search for Item
@@ -330,16 +309,11 @@
                 class="search-results"
             ></div>
 
-            <div
-                id="stockSelected"
-                class="selected-item"
-                style="display: none;"
-            ></div>
-
             <input
                 type="hidden"
                 id="stockItem"
                 name="stockItem"
+                required
             >
 
             <label for="stockQuantity">
@@ -359,6 +333,106 @@
                 class="primary"
             >
                 Add Stock
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- EDIT ITEM -->
+    <!-- ================================================= -->
+
+    <div class="card">
+
+        <h2>Edit Item</h2>
+
+        <form action="/edit-item" method="POST">
+
+            <label for="editSearch">
+                Search for Item
+            </label>
+
+            <input
+                type="text"
+                id="editSearch"
+                placeholder="Start typing an item name..."
+                autocomplete="off"
+            >
+
+            <div
+                id="editResults"
+                class="search-results"
+            ></div>
+
+            <input
+                type="hidden"
+                id="originalName"
+                name="originalName"
+                required
+            >
+
+            <label for="editItemName">
+                Item Name
+            </label>
+
+            <input
+                type="text"
+                id="editItemName"
+                name="itemName"
+                required
+            >
+
+            <label for="editQuantity">
+                Quantity
+            </label>
+
+            <input
+                type="number"
+                id="editQuantity"
+                name="quantity"
+                min="0"
+                required
+            >
+
+            <label for="editMinimumStock">
+                Minimum Stock
+            </label>
+
+            <input
+                type="number"
+                id="editMinimumStock"
+                name="minimumStock"
+                min="0"
+                required
+            >
+
+            <label for="editCategory">
+                Category
+            </label>
+
+            <input
+                type="text"
+                id="editCategory"
+                name="category"
+            >
+
+            <label for="editLocation">
+                Location
+            </label>
+
+            <input
+                type="text"
+                id="editLocation"
+                name="location"
+            >
+
+            <button
+                type="submit"
+                class="warning"
+            >
+                Save Changes
             </button>
 
         </form>
@@ -470,9 +544,13 @@
                     >
 
                         <td>{{ item_name }}</td>
+
                         <td>{{ item.quantity }}</td>
+
                         <td>{{ item.minimum_stock }}</td>
+
                         <td>{{ item.category }}</td>
+
                         <td>{{ item.location }}</td>
 
                         <td>
@@ -648,7 +726,7 @@
 
 
     <!-- ================================================= -->
-    <!-- NAVIGATION / REPORT BUTTONS -->
+    <!-- TOOLS -->
     <!-- ================================================= -->
 
     <div class="card">
@@ -702,73 +780,122 @@
 
 <script>
 
-    const inventoryItems = [
-        {% for item_name in inventory.keys() %}
-            {{ item_name|tojson }},
+    // =====================================================
+    // INVENTORY DATA
+    // =====================================================
+
+    const inventoryData = {
+
+        {% for item_name, item in inventory.items() %}
+
+            {{ item_name|tojson }}: {
+
+                quantity:
+                    {{ item.quantity|tojson }},
+
+                minimum_stock:
+                    {{ item.minimum_stock|tojson }},
+
+                category:
+                    {{ item.category|tojson }},
+
+                location:
+                    {{ item.location|tojson }}
+
+            },
+
         {% endfor %}
-    ];
+
+    };
+
+
+    const inventoryItems =
+        Object.keys(inventoryData);
 
 
     // =====================================================
     // USE ITEM SEARCH
     // =====================================================
 
-    const useSearch = document.getElementById("useSearch");
-    const useResults = document.getElementById("useResults");
-    const useItem = document.getElementById("useItem");
-    const useSelected = document.getElementById("useSelected");
-    const useForm = document.getElementById("useForm");
+    const useSearch =
+        document.getElementById("useSearch");
+
+    const useResults =
+        document.getElementById("useResults");
+
+    const useItem =
+        document.getElementById("useItem");
 
 
     if (useSearch) {
 
-        useSearch.addEventListener("input", function () {
+        useSearch.addEventListener(
+            "input",
+            function () {
 
-            const search = this.value.toLowerCase().trim();
+                const search =
+                    this.value
+                        .toLowerCase()
+                        .trim();
 
-            useResults.innerHTML = "";
-            useItem.value = "";
+                useResults.innerHTML = "";
 
-            useSelected.style.display = "none";
-            useSelected.textContent = "";
+                useItem.value = "";
 
-            if (!search) {
-                return;
+
+                if (!search) {
+                    return;
+                }
+
+
+                const matches =
+                    inventoryItems.filter(
+                        function (item) {
+
+                            return item
+                                .toLowerCase()
+                                .includes(search);
+
+                        }
+                    );
+
+
+                matches.forEach(
+                    function (item) {
+
+                        const button =
+                            document.createElement("button");
+
+                        button.type = "button";
+
+                        button.className =
+                            "search-result";
+
+                        button.textContent =
+                            item;
+
+
+                        button.addEventListener(
+                            "click",
+                            function () {
+
+                                useSearch.value = item;
+
+                                useItem.value = item;
+
+                                useResults.innerHTML = "";
+
+                            }
+                        );
+
+
+                        useResults.appendChild(button);
+
+                    }
+                );
+
             }
-
-            const matches = inventoryItems.filter(function (item) {
-
-                return item.toLowerCase().includes(search);
-
-            });
-
-            matches.forEach(function (item) {
-
-                const button = document.createElement("button");
-
-                button.type = "button";
-                button.className = "search-result";
-                button.textContent = item;
-
-                button.addEventListener("click", function () {
-
-                    useSearch.value = item;
-                    useItem.value = item;
-
-                    useSelected.textContent =
-                        "Selected: " + item;
-
-                    useSelected.style.display = "block";
-
-                    useResults.innerHTML = "";
-
-                });
-
-                useResults.appendChild(button);
-
-            });
-
-        });
+        );
 
     }
 
@@ -777,104 +904,210 @@
     // ADD STOCK SEARCH
     // =====================================================
 
-    const stockSearch = document.getElementById("stockSearch");
-    const stockResults = document.getElementById("stockResults");
-    const stockItem = document.getElementById("stockItem");
-    const stockSelected = document.getElementById("stockSelected");
-    const stockForm = document.getElementById("stockForm");
+    const stockSearch =
+        document.getElementById("stockSearch");
+
+    const stockResults =
+        document.getElementById("stockResults");
+
+    const stockItem =
+        document.getElementById("stockItem");
 
 
     if (stockSearch) {
 
-        stockSearch.addEventListener("input", function () {
+        stockSearch.addEventListener(
+            "input",
+            function () {
 
-            const search = this.value.toLowerCase().trim();
+                const search =
+                    this.value
+                        .toLowerCase()
+                        .trim();
 
-            stockResults.innerHTML = "";
-            stockItem.value = "";
+                stockResults.innerHTML = "";
 
-            stockSelected.style.display = "none";
-            stockSelected.textContent = "";
+                stockItem.value = "";
 
-            if (!search) {
-                return;
+
+                if (!search) {
+                    return;
+                }
+
+
+                const matches =
+                    inventoryItems.filter(
+                        function (item) {
+
+                            return item
+                                .toLowerCase()
+                                .includes(search);
+
+                        }
+                    );
+
+
+                matches.forEach(
+                    function (item) {
+
+                        const button =
+                            document.createElement("button");
+
+                        button.type = "button";
+
+                        button.className =
+                            "search-result";
+
+                        button.textContent =
+                            item;
+
+
+                        button.addEventListener(
+                            "click",
+                            function () {
+
+                                stockSearch.value = item;
+
+                                stockItem.value = item;
+
+                                stockResults.innerHTML = "";
+
+                            }
+                        );
+
+
+                        stockResults.appendChild(button);
+
+                    }
+                );
+
             }
-
-            const matches = inventoryItems.filter(function (item) {
-
-                return item.toLowerCase().includes(search);
-
-            });
-
-            matches.forEach(function (item) {
-
-                const button = document.createElement("button");
-
-                button.type = "button";
-                button.className = "search-result";
-                button.textContent = item;
-
-                button.addEventListener("click", function () {
-
-                    stockSearch.value = item;
-                    stockItem.value = item;
-
-                    stockSelected.textContent =
-                        "Selected: " + item;
-
-                    stockSelected.style.display = "block";
-
-                    stockResults.innerHTML = "";
-
-                });
-
-                stockResults.appendChild(button);
-
-            });
-
-        });
+        );
 
     }
 
 
     // =====================================================
-    // PREVENT SUBMIT WITHOUT SELECTING AN ITEM
+    // EDIT ITEM SEARCH
     // =====================================================
 
-    if (useForm) {
+    const editSearch =
+        document.getElementById("editSearch");
 
-        useForm.addEventListener("submit", function (event) {
+    const editResults =
+        document.getElementById("editResults");
 
-            if (!useItem.value) {
+    const originalName =
+        document.getElementById("originalName");
 
-                event.preventDefault();
+    const editItemName =
+        document.getElementById("editItemName");
 
-                alert("Please search for and select an item first.");
+    const editQuantity =
+        document.getElementById("editQuantity");
 
-                useSearch.focus();
+    const editMinimumStock =
+        document.getElementById("editMinimumStock");
+
+    const editCategory =
+        document.getElementById("editCategory");
+
+    const editLocation =
+        document.getElementById("editLocation");
+
+
+    if (editSearch) {
+
+        editSearch.addEventListener(
+            "input",
+            function () {
+
+                const search =
+                    this.value
+                        .toLowerCase()
+                        .trim();
+
+                editResults.innerHTML = "";
+
+                originalName.value = "";
+
+
+                if (!search) {
+                    return;
+                }
+
+
+                const matches =
+                    inventoryItems.filter(
+                        function (item) {
+
+                            return item
+                                .toLowerCase()
+                                .includes(search);
+
+                        }
+                    );
+
+
+                matches.forEach(
+                    function (item) {
+
+                        const button =
+                            document.createElement("button");
+
+                        button.type = "button";
+
+                        button.className =
+                            "search-result";
+
+                        button.textContent =
+                            item;
+
+
+                        button.addEventListener(
+                            "click",
+                            function () {
+
+                                const selectedItem =
+                                    inventoryData[item];
+
+
+                                editSearch.value =
+                                    item;
+
+                                originalName.value =
+                                    item;
+
+                                editResults.innerHTML =
+                                    "";
+
+
+                                editItemName.value =
+                                    item;
+
+                                editQuantity.value =
+                                    selectedItem.quantity;
+
+                                editMinimumStock.value =
+                                    selectedItem.minimum_stock;
+
+                                editCategory.value =
+                                    selectedItem.category;
+
+                                editLocation.value =
+                                    selectedItem.location;
+
+                            }
+                        );
+
+
+                        editResults.appendChild(button);
+
+                    }
+                );
 
             }
-
-        });
-
-    }
-
-
-    if (stockForm) {
-
-        stockForm.addEventListener("submit", function (event) {
-
-            if (!stockItem.value) {
-
-                event.preventDefault();
-
-                alert("Please search for and select an item first.");
-
-                stockSearch.focus();
-
-            }
-
-        });
+        );
 
     }
 
