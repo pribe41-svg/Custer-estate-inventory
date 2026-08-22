@@ -219,7 +219,7 @@ def use_item():
 
 @app.route("/low-stock")
 def low_stock():
-    inventory = load_inventory()
+    inventory = load_inventory_from_database()
 
     low_stock_items = {}
 
@@ -359,14 +359,19 @@ def monthly_report():
     connection = get_connection()
     cursor = connection.cursor()
 
+    placeholder = "%s" if using_postgres() else "?"
+
     if month:
-        cursor.execute("""
+        cursor.execute(
+            f"""
             SELECT item_name, SUM(amount) AS total_used
             FROM usage_log
-            WHERE date LIKE %s
+            WHERE date LIKE {placeholder}
             GROUP BY item_name
             ORDER BY item_name
-        """, (month + "%",))
+            """,
+            (month + "%",)
+        )
     else:
         cursor.execute("""
             SELECT item_name, SUM(amount) AS total_used
@@ -380,18 +385,18 @@ def monthly_report():
     cursor.close()
     connection.close()
 
-    report = []
+    monthly_totals = {}
 
     for row in rows:
-        report.append({
-            "item": row[0],
-            "quantity": row[1]
-        })
+        monthly_totals[row[0]] = row[1]
+
+    inventory = load_inventory_from_database()
 
     return render_template(
-        "monthly_report.html",
-        report=report,
-        month=month
+        "index.html",
+        inventory=inventory,
+        monthly_totals=monthly_totals,
+        selected_month=month
     )
 
 
