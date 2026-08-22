@@ -126,6 +126,43 @@
             margin-bottom: 20px;
         }
 
+        .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.dashboard-box {
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.dashboard-box strong {
+    display: block;
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.dashboard-box span {
+    color: #666;
+    font-size: 15px;
+}
+
+@media (max-width: 700px) {
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-box strong {
+        font-size: 26px;
+    }
+}
+
+
         .empty {
             color: #777;
         }
@@ -157,6 +194,41 @@
 <div class="container">
 
     <h1>Maintenance Inventory</h1>
+
+    <!-- ================================================= -->
+<!-- INVENTORY DASHBOARD -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Inventory Overview</h2>
+
+    <div class="dashboard-grid">
+
+        <div class="dashboard-box">
+            <strong>{{ total_items|default(0) }}</strong>
+            <span>Items</span>
+        </div>
+
+        <div class="dashboard-box">
+            <strong>{{ total_quantity|default(0) }}</strong>
+            <span>Total Units</span>
+        </div>
+
+        <div class="dashboard-box">
+            <strong>{{ low_stock_count|default(0) }}</strong>
+            <span>Low Stock</span>
+        </div>
+
+        <div class="dashboard-box">
+            <strong>{{ out_of_stock_count|default(0) }}</strong>
+            <span>Out of Stock</span>
+        </div>
+
+    </div>
+
+</div>
+
 
 
     <!-- ================================================= -->

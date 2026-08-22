@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, redirect
 import os
 from datetime import datetime
 import csv
@@ -49,19 +49,43 @@ def load_inventory_from_database():
     return inventory
 
 
-# ============================================================
-# HOME
-# ============================================================
-
 @app.route("/")
 def home():
 
     inventory = load_inventory_from_database()
 
+    # ========================================================
+    # DASHBOARD TOTALS
+    # ========================================================
+
+    total_items = len(inventory)
+
+    total_quantity = sum(
+        item["quantity"]
+        for item in inventory.values()
+    )
+
+    low_stock_count = sum(
+        1
+        for item in inventory.values()
+        if item["quantity"] <= item["minimum_stock"]
+    )
+
+    out_of_stock_count = sum(
+        1
+        for item in inventory.values()
+        if item["quantity"] == 0
+    )
+
     return render_template(
         "index.html",
-        inventory=inventory
+        inventory=inventory,
+        total_items=total_items,
+        total_quantity=total_quantity,
+        low_stock_count=low_stock_count,
+        out_of_stock_count=out_of_stock_count
     )
+
 
 
 # ============================================================
@@ -218,10 +242,8 @@ def add_stock():
 
     inventory = load_inventory_from_database()
 
-    return render_template(
-        "index.html",
-        inventory=inventory
-    )
+    return redirect("/")
+
 
 # ============================================================
 # EDIT ITEM
@@ -272,10 +294,7 @@ def edit_item():
 
     inventory = load_inventory_from_database()
 
-    return render_template(
-        "index.html",
-        inventory=inventory
-    )
+    return redirect("/")
 
 
 # ============================================================
@@ -358,10 +377,7 @@ def use_item():
 
     inventory = load_inventory_from_database()
 
-    return render_template(
-        "index.html",
-        inventory=inventory
-    )
+    return redirect("/")
 
 
 # ============================================================
@@ -380,11 +396,7 @@ def low_stock():
         if item["quantity"] <= item["minimum_stock"]:
             low_stock_items[item_name] = item
 
-    return render_template(
-        "index.html",
-        inventory=inventory,
-        low_stock_items=low_stock_items
-    )
+    return redirect("/")
 
 
 # ============================================================
@@ -631,10 +643,7 @@ def delete_item():
 
     inventory = load_inventory_from_database()
 
-    return render_template(
-        "index.html",
-        inventory=inventory
-    )
+    return redirect("/")
 
 
 # ============================================================
