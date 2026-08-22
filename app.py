@@ -41,18 +41,27 @@ def load_inventory_from_database():
 
     rows = cursor.fetchall()
 
-    cursor.close()
-    connection.close()
-
     inventory = {}
 
     for row in rows:
-        inventory[row[0]] = {
-            "quantity": row[1],
-            "minimum_stock": row[2],
-            "category": row[3],
-            "location": row[4]
+        if using_postgres():
+            name, quantity, minimum_stock, category, location = row
+        else:
+            name = row["name"]
+            quantity = row["quantity"]
+            minimum_stock = row["minimum_stock"]
+            category = row["category"]
+            location = row["location"]
+
+        inventory[name] = {
+            "quantity": quantity,
+            "minimum_stock": minimum_stock,
+            "category": category,
+            "location": location
         }
+
+    cursor.close()
+    connection.close()
 
     return inventory
 
