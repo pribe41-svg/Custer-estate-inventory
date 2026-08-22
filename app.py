@@ -428,7 +428,7 @@ def delete_item():
 
 @app.route("/export-csv")
 def export_csv():
-    inventory = load_inventory()
+    inventory = load_inventory_from_database()
 
     filename = "inventory_export.csv"
 
