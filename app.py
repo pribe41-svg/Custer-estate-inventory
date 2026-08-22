@@ -180,10 +180,7 @@ def add_item():
 
     inventory = load_inventory_from_database()
 
-    return render_template(
-        "index.html",
-        inventory=inventory
-    )
+    return redirect("/")
 
 
 # ============================================================
