@@ -316,18 +316,11 @@ def usage_report():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute(
-    f"""
-    INSERT INTO usage_log
-    (item_name, amount, date)
-    VALUES ({placeholder}, {placeholder}, {placeholder})
-    """,
-    (
-        item_name,
-        quantity_used,
-        datetime.now().strftime("%Y-%m-%d")
-    )
-)
+    cursor.execute("""
+        SELECT item_name, amount, date
+        FROM usage_log
+        ORDER BY date DESC
+    """)
 
     rows = cursor.fetchall()
 
@@ -337,15 +330,26 @@ def usage_report():
     usage_log = []
 
     for row in rows:
+        if using_postgres():
+            item_name, amount, date = row
+        else:
+            item_name = row["item_name"]
+            amount = row["amount"]
+            date = row["date"]
+
         usage_log.append({
-            "item": row[0],
-            "quantity": row[1],
-            "date": row[2]
+            "item": item_name,
+            "quantity": amount,
+            "date": date
         })
 
+    inventory = load_inventory_from_database()
+
     return render_template(
-        "usage_report.html",
-        usage_log=usage_log
+        "index.html",
+        inventory=inventory,
+        usage_log=usage_log,
+        show_usage_report=True
     )
 
 @app.route("/monthly-report")
