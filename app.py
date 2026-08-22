@@ -5,7 +5,6 @@ import csv
 
 from database import get_connection, initialize_database, using_postgres
 
-
 app = Flask(__name__)
 
 
@@ -56,12 +55,53 @@ def load_inventory_from_database():
 
 @app.route("/")
 def home():
+
     inventory = load_inventory_from_database()
 
     return render_template(
         "index.html",
         inventory=inventory
     )
+
+
+# ============================================================
+# DATABASE DIAGNOSTIC
+# ============================================================
+
+@app.route("/database-check")
+def database_check():
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    database_type = "PostgreSQL" if using_postgres() else "SQLite"
+
+    database_name = "Unknown"
+
+    if using_postgres():
+
+        cursor.execute("SELECT current_database()")
+        row = cursor.fetchone()
+
+        if row:
+            database_name = row[0]
+
+    else:
+        database_name = "inventory.db"
+
+    cursor.close()
+    connection.close()
+
+    return f"""
+    <h1>Database Check</h1>
+
+    <p><strong>Database Type:</strong> {database_type}</p>
+
+    <p><strong>Database Name:</strong> {database_name}</p>
+
+    <p><strong>DATABASE_URL detected:</strong>
+    {bool(os.environ.get("DATABASE_URL"))}</p>
+    """
 
 
 # ============================================================
@@ -76,9 +116,6 @@ def add_item():
     minimum_stock = int(request.form["minimumStock"])
     category = request.form["category"]
     location = request.form["location"]
-
-    print("DATABASE_URL detected:", bool(os.environ.get("DATABASE_URL")))
-    print("Using PostgreSQL:", using_postgres())
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -124,6 +161,7 @@ def add_item():
         inventory=inventory
     )
 
+
 # ============================================================
 # ADD STOCK
 # ============================================================
@@ -139,7 +177,6 @@ def add_stock():
 
     placeholder = "%s" if using_postgres() else "?"
 
-    # Get current quantity
     cursor.execute(
         f"""
         SELECT quantity
@@ -152,14 +189,16 @@ def add_stock():
     item = cursor.fetchone()
 
     if item is None:
+
         cursor.close()
         connection.close()
+
         return "Item not found", 404
 
     current_quantity = item[0]
+
     new_quantity = current_quantity + quantity_added
 
-    # Add the new stock to the existing quantity
     cursor.execute(
         f"""
         UPDATE inventory
@@ -200,7 +239,6 @@ def use_item():
 
     placeholder = "%s" if using_postgres() else "?"
 
-    # Find item
     cursor.execute(
         f"""
         SELECT quantity
@@ -213,21 +251,23 @@ def use_item():
     item = cursor.fetchone()
 
     if item is None:
+
         cursor.close()
         connection.close()
+
         return "Item not found", 404
 
     current_quantity = item[0]
 
-    # Make sure there is enough inventory
     if quantity_used > current_quantity:
+
         cursor.close()
         connection.close()
+
         return "You cannot use more than the current quantity.", 400
 
     new_quantity = current_quantity - quantity_used
 
-    # Update inventory
     cursor.execute(
         f"""
         UPDATE inventory
@@ -240,7 +280,6 @@ def use_item():
         )
     )
 
-    # Record usage
     cursor.execute(
         f"""
         INSERT INTO usage_log
@@ -494,13 +533,8 @@ def monthly_report():
 
     for row in rows:
 
-        if using_postgres():
-            item_name = row[0]
-            total_used = row[1]
-
-        else:
-            item_name = row[0]
-            total_used = row[1]
+        item_name = row[0]
+        total_used = row[1]
 
         monthly_totals[item_name] = total_used
 
