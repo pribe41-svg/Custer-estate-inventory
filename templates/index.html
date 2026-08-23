@@ -229,6 +229,44 @@
 
 </div>
 
+    <div class="card">
+
+    <h2>Site</h2>
+
+    <form action="/" method="GET">
+
+        <label for="siteFilter">
+            View Inventory For
+        </label>
+
+        <select
+            id="siteFilter"
+            name="site"
+            onchange="this.form.submit()"
+        >
+
+            <option value="">
+                All Sites
+            </option>
+
+            {% for site in sites %}
+
+                <option
+                    value="{{ site }}"
+                    {% if selected_site == site %}
+                        selected
+                    {% endif %}
+                >
+                    {{ site }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    </form>
+
+</div>
 
 
     <!-- ================================================= -->
@@ -240,6 +278,30 @@
         <h2>Add Item</h2>
 
         <form action="/add" method="POST">
+
+            <label for="itemSite">Site</label>
+
+            <label for="itemSite">Site</label>
+
+            <select id="itemSite" name="site" required>
+                <option value="Unassigned">Unassigned</option>
+
+                {% for site in sites %}
+                    <option value="{{ site }}">{{ site }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="site">Site</label>
+
+<select
+    id="site"
+    name="site"
+    required
+>
+    <option value="Custer Estates">Custer Estates</option>
+    <option value="Culver Estates">Culver Estates</option>
+    <option value="Unassigned">Unassigned</option>
+</select>
 
             <label for="itemName">Item Name</label>
 
@@ -306,7 +368,39 @@
 
         <h2>Use Item</h2>
 
+        <label for="useSite">
+    Site
+</label>
+
+<select id="useSite" name="useSite" required>
+
+    <option value="Unassigned">
+        Unassigned
+    </option>
+
+    {% for site in sites %}
+
+        <option value="{{ site }}">
+            {{ site }}
+        </option>
+
+    {% endfor %}
+
+</select>
+
         <form action="/use" method="POST">
+
+            <label for="useSite">Site</label>
+
+<select
+    id="useSite"
+    name="useSite"
+    required
+>
+    <option value="Custer Estates">Custer Estates</option>
+    <option value="Culver Estates">Culver Estates</option>
+    <option value="Unassigned">Unassigned</option>
+</select>
 
             <label for="useSearch">
                 Search for Item
@@ -363,7 +457,39 @@
 
         <h2>Add Stock</h2>
 
+        <label for="stockSite">
+    Site
+</label>
+
+<select id="stockSite" name="stockSite" required>
+
+    <option value="Unassigned">
+        Unassigned
+    </option>
+
+    {% for site in sites %}
+
+        <option value="{{ site }}">
+            {{ site }}
+        </option>
+
+    {% endfor %}
+
+</select>
+
         <form action="/add-stock" method="POST">
+
+            <label for="stockSite">Site</label>
+
+<select
+    id="stockSite"
+    name="stockSite"
+    required
+>
+    <option value="Custer Estates">Custer Estates</option>
+    <option value="Culver Estates">Culver Estates</option>
+    <option value="Unassigned">Unassigned</option>
+</select>
 
             <label for="stockSearch">
                 Search for Item
@@ -420,7 +546,39 @@
 
         <h2>Edit Item</h2>
 
+        <label for="stockSite">
+    Site
+</label>
+
+<select id="stockSite" name="stockSite" required>
+
+    <option value="Unassigned">
+        Unassigned
+    </option>
+
+    {% for site in sites %}
+
+        <option value="{{ site }}">
+            {{ site }}
+        </option>
+
+    {% endfor %}
+
+</select>
+
         <form action="/edit-item" method="POST">
+
+            <label for="editSite">Site</label>
+
+<select
+    id="editSite"
+    name="site"
+    required
+>
+    <option value="Custer Estates">Custer Estates</option>
+    <option value="Culver Estates">Culver Estates</option>
+    <option value="Unassigned">Unassigned</option>
+</select>
 
             <label for="editSearch">
                 Search for Item
@@ -586,85 +744,6 @@
     </div>
 
 
-    <!-- ================================================= -->
-    <!-- INVENTORY -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Inventory</h2>
-
-        {% if inventory %}
-
-            <table>
-
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Minimum</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Action</th>
-                </tr>
-
-                {% for item_name, item in inventory.items() %}
-
-                    <tr
-                        {% if item.quantity <= item.minimum_stock %}
-                            class="low-stock"
-                        {% endif %}
-                    >
-
-                        <td>{{ item_name }}</td>
-
-                        <td>{{ item.quantity }}</td>
-
-                        <td>{{ item.minimum_stock }}</td>
-
-                        <td>{{ item.category }}</td>
-
-                        <td>{{ item.location }}</td>
-
-                        <td>
-
-                            <form
-                                action="/delete"
-                                method="POST"
-                                onsubmit="return confirm('Delete this item?');"
-                            >
-
-                                <input
-                                    type="hidden"
-                                    name="deleteItem"
-                                    value="{{ item_name }}"
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="danger"
-                                >
-                                    Delete
-                                </button>
-
-                            </form>
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        {% else %}
-
-            <p class="empty">
-                No inventory items found.
-            </p>
-
-        {% endif %}
-
-    </div>
 
 
     <!-- ================================================= -->
@@ -795,6 +874,95 @@
     </div>
 
     {% endif %}
+
+
+    <!-- ================================================= -->
+    <!-- INVENTORY -->
+    <!-- ================================================= -->
+
+    <div class="card">
+
+        <h2>Inventory</h2>
+
+        {% if inventory %}
+
+            <table>
+
+                <tr>
+                    <th>Site</th>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Minimum</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Action</th>
+                </tr>
+
+                {% for item_name, item in inventory.items() %}
+
+                    <tr
+                        {% if item.quantity <= item.minimum_stock %}
+                            class="low-stock"
+                        {% endif %}
+                    >
+                        <td>{{ item.site }}</td>
+
+                        <td>{{ item_name }}</td>
+
+                        <td>{{ item.quantity }}</td>
+
+                        <td>{{ item.minimum_stock }}</td>
+
+                        <td>{{ item.category }}</td>
+
+                        <td>{{ item.location }}</td>
+
+                        <td>
+
+                            <form
+                                action="/delete"
+                                method="POST"
+                                onsubmit="return confirm('Delete this item?');"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="deleteItem"
+                                    value="{{ item_name }}"
+
+                                <input
+                                    type="hidden"
+                                    name="deleteSite"
+                                    value="{{ item.site }}"
+>    
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="danger"
+                                >
+                                    Delete
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </table>
+
+        {% else %}
+
+            <p class="empty">
+                No inventory items found.
+            </p>
+
+        {% endif %}
+
+    </div>
 
 
     <!-- ================================================= -->
