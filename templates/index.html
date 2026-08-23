@@ -3,199 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maintenance Inventory</title>
 
-    <title>Maintenance Inventory</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f4f4f4;
+    }
 
-    <style>
+    .container {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    h1, h2 {
+        margin-bottom: 15px;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    input,
+    select,
+    button {
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 4px;
+    }
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+    .search-results {
+        position: relative;
+        margin-top: -8px;
+        margin-bottom: 10px;
+    }
+
+    .search-result {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin: 2px 0;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .search-result:hover {
+        background: #eee;
+    }
+
+    .primary {
+        background: #333;
+        color: white;
+    }
+
+    .danger {
+        background: #c62828;
+        color: white;
+    }
+
+    .warning {
+        background: #f0a000;
+        color: white;
+    }
+
+    .secondary {
+        background: #777;
+        color: white;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background: #eee;
+    }
+
+    .low-stock {
+        background: #fff0f0;
+    }
+
+    .location-group {
+        margin-bottom: 20px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .dashboard-box {
+        background: #f4f4f4;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .dashboard-box strong {
+        display: block;
+        font-size: 32px;
+        margin-bottom: 5px;
+    }
+
+    .dashboard-box span {
+        color: #666;
+        font-size: 15px;
+    }
+
+    .empty {
+        color: #777;
+    }
+
+    @media (max-width: 700px) {
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f4f4f4;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        h1, h2 {
-            margin-bottom: 15px;
+            padding: 10px;
         }
 
         .card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        input,
-        select,
-        button {
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 4px;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .search-results {
-            position: relative;
-            margin-top: -8px;
-            margin-bottom: 10px;
-        }
-
-        .search-result {
-            display: block;
-            width: 100%;
-            text-align: left;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin: 2px 0;
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .search-result:hover {
-            background: #eee;
-        }
-
-        .primary {
-            background: #333;
-            color: white;
-        }
-
-        .danger {
-            background: #c62828;
-            color: white;
-        }
-
-        .warning {
-            background: #f0a000;
-            color: white;
-        }
-
-        .secondary {
-            background: #777;
-            color: white;
+            padding: 15px;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
+            font-size: 14px;
         }
 
         th,
         td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #eee;
-        }
-
-        .low-stock {
-            background: #fff0f0;
-        }
-
-        .location-group {
-            margin-bottom: 20px;
+            padding: 7px;
         }
 
         .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-}
-
-.dashboard-box {
-    background: #f4f4f4;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-}
-
-.dashboard-box strong {
-    display: block;
-    font-size: 32px;
-    margin-bottom: 5px;
-}
-
-.dashboard-box span {
-    color: #666;
-    font-size: 15px;
-}
-
-@media (max-width: 700px) {
-
-    .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .dashboard-box strong {
-        font-size: 26px;
-    }
-}
-
-
-        .empty {
-            color: #777;
+            grid-template-columns: repeat(2, 1fr);
         }
 
-        @media (max-width: 700px) {
-
-            body {
-                padding: 10px;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            table {
-                font-size: 14px;
-            }
-
-            th,
-            td {
-                padding: 7px;
-            }
+        .dashboard-box strong {
+            font-size: 26px;
         }
-    </style>
+    }
+</style>
 </head>
-
 <body>
-
 <div class="container">
+<h1>Maintenance Inventory</h1>
 
-    <h1>Maintenance Inventory</h1>
-
-    <!-- ================================================= -->
+<!-- ================================================= -->
 <!-- INVENTORY DASHBOARD -->
 <!-- ================================================= -->
 
@@ -229,795 +220,622 @@
 
 </div>
 
-    <div class="card">
 
-    <h2>Site</h2>
+<!-- ================================================= -->
+<!-- ADD ITEM -->
+<!-- ================================================= -->
 
-    <form action="/" method="GET">
+<div class="card">
 
-        <label for="siteFilter">
-            View Inventory For
-        </label>
+    <h2>Add Item</h2>
 
-        <select
-            id="siteFilter"
-            name="site"
-            onchange="this.form.submit()"
+    <form action="/add" method="POST">
+
+        <label for="itemName">Item Name</label>
+
+        <input
+            type="text"
+            id="itemName"
+            name="itemName"
+            required
         >
 
-            <option value="">
-                All Sites
-            </option>
+        <label for="quantity">Quantity</label>
 
-            {% for site in sites %}
+        <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            min="0"
+            required
+        >
 
-                <option
-                    value="{{ site }}"
-                    {% if selected_site == site %}
-                        selected
-                    {% endif %}
-                >
-                    {{ site }}
-                </option>
+        <label for="minimumStock">Minimum Stock</label>
 
-            {% endfor %}
+        <input
+            type="number"
+            id="minimumStock"
+            name="minimumStock"
+            min="0"
+            required
+        >
 
-        </select>
+        <label for="category">Category</label>
+
+        <input
+            type="text"
+            id="category"
+            name="category"
+        >
+
+        <label for="location">Location</label>
+
+        <input
+            type="text"
+            id="location"
+            name="location"
+        >
+
+        <button
+            type="submit"
+            class="primary"
+        >
+            Add Item
+        </button>
 
     </form>
 
 </div>
 
 
-    <!-- ================================================= -->
-    <!-- ADD ITEM -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Add Item</h2>
-
-        <form action="/add" method="POST">
-
-            <label for="itemSite">Site</label>
-
-            <label for="itemSite">Site</label>
-
-            <select id="itemSite" name="site" required>
-                <option value="Unassigned">Unassigned</option>
-
-                {% for site in sites %}
-                    <option value="{{ site }}">{{ site }}</option>
-                {% endfor %}
-            </select>
-
-            <label for="site">Site</label>
-
-<select
-    id="site"
-    name="site"
-    required
->
-    <option value="Custer Estates">Custer Estates</option>
-    <option value="Culver Estates">Culver Estates</option>
-    <option value="Unassigned">Unassigned</option>
-</select>
-
-            <label for="itemName">Item Name</label>
-
-            <input
-                type="text"
-                id="itemName"
-                name="itemName"
-                required
-            >
-
-            <label for="quantity">Quantity</label>
-
-            <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                min="0"
-                required
-            >
-
-            <label for="minimumStock">Minimum Stock</label>
-
-            <input
-                type="number"
-                id="minimumStock"
-                name="minimumStock"
-                min="0"
-                required
-            >
-
-            <label for="category">Category</label>
-
-            <input
-                type="text"
-                id="category"
-                name="category"
-            >
-
-            <label for="location">Location</label>
-
-            <input
-                type="text"
-                id="location"
-                name="location"
-            >
-
-            <button
-                type="submit"
-                class="primary"
-            >
-                Add Item
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- USE ITEM -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Use Item</h2>
-
-        <label for="useSite">
-    Site
-</label>
-
-<select id="useSite" name="useSite" required>
-
-    <option value="Unassigned">
-        Unassigned
-    </option>
-
-    {% for site in sites %}
-
-        <option value="{{ site }}">
-            {{ site }}
-        </option>
-
-    {% endfor %}
-
-</select>
-
-        <form action="/use" method="POST">
-
-            <label for="useSite">Site</label>
-
-<select
-    id="useSite"
-    name="useSite"
-    required
->
-    <option value="Custer Estates">Custer Estates</option>
-    <option value="Culver Estates">Culver Estates</option>
-    <option value="Unassigned">Unassigned</option>
-</select>
-
-            <label for="useSearch">
-                Search for Item
-            </label>
-
-            <input
-                type="text"
-                id="useSearch"
-                placeholder="Start typing an item name..."
-                autocomplete="off"
-            >
-
-            <div
-                id="useResults"
-                class="search-results"
-            ></div>
-
-            <input
-                type="hidden"
-                id="useItem"
-                name="useItem"
-                required
-            >
-
-            <label for="useQuantity">
-                Quantity Used
-            </label>
-
-            <input
-                type="number"
-                id="useQuantity"
-                name="useQuantity"
-                min="1"
-                required
-            >
-
-            <button
-                type="submit"
-                class="danger"
-            >
-                Use Item
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- ADD STOCK -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Add Stock</h2>
-
-        <label for="stockSite">
-    Site
-</label>
-
-<select id="stockSite" name="stockSite" required>
-
-    <option value="Unassigned">
-        Unassigned
-    </option>
-
-    {% for site in sites %}
-
-        <option value="{{ site }}">
-            {{ site }}
-        </option>
-
-    {% endfor %}
-
-</select>
-
-        <form action="/add-stock" method="POST">
-
-            <label for="stockSite">Site</label>
-
-<select
-    id="stockSite"
-    name="stockSite"
-    required
->
-    <option value="Custer Estates">Custer Estates</option>
-    <option value="Culver Estates">Culver Estates</option>
-    <option value="Unassigned">Unassigned</option>
-</select>
-
-            <label for="stockSearch">
-                Search for Item
-            </label>
-
-            <input
-                type="text"
-                id="stockSearch"
-                placeholder="Start typing an item name..."
-                autocomplete="off"
-            >
-
-            <div
-                id="stockResults"
-                class="search-results"
-            ></div>
-
-            <input
-                type="hidden"
-                id="stockItem"
-                name="stockItem"
-                required
-            >
-
-            <label for="stockQuantity">
-                Quantity to Add
-            </label>
-
-            <input
-                type="number"
-                id="stockQuantity"
-                name="stockQuantity"
-                min="1"
-                required
-            >
-
-            <button
-                type="submit"
-                class="primary"
-            >
-                Add Stock
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- EDIT ITEM -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Edit Item</h2>
-
-        <label for="stockSite">
-    Site
-</label>
-
-<select id="stockSite" name="stockSite" required>
-
-    <option value="Unassigned">
-        Unassigned
-    </option>
-
-    {% for site in sites %}
-
-        <option value="{{ site }}">
-            {{ site }}
-        </option>
-
-    {% endfor %}
-
-</select>
-
-        <form action="/edit-item" method="POST">
-
-            <label for="editSite">Site</label>
-
-<select
-    id="editSite"
-    name="site"
-    required
->
-    <option value="Custer Estates">Custer Estates</option>
-    <option value="Culver Estates">Culver Estates</option>
-    <option value="Unassigned">Unassigned</option>
-</select>
-
-            <label for="editSearch">
-                Search for Item
-            </label>
-
-            <input
-                type="text"
-                id="editSearch"
-                placeholder="Start typing an item name..."
-                autocomplete="off"
-            >
-
-            <div
-                id="editResults"
-                class="search-results"
-            ></div>
-
-            <input
-                type="hidden"
-                id="originalName"
-                name="originalName"
-                required
-            >
-
-            <label for="editItemName">
-                Item Name
-            </label>
-
-            <input
-                type="text"
-                id="editItemName"
-                name="itemName"
-                required
-            >
-
-            <label for="editQuantity">
-                Quantity
-            </label>
-
-            <input
-                type="number"
-                id="editQuantity"
-                name="quantity"
-                min="0"
-                required
-            >
-
-            <label for="editMinimumStock">
-                Minimum Stock
-            </label>
-
-            <input
-                type="number"
-                id="editMinimumStock"
-                name="minimumStock"
-                min="0"
-                required
-            >
-
-            <label for="editCategory">
-                Category
-            </label>
-
-            <input
-                type="text"
-                id="editCategory"
-                name="category"
-            >
-
-            <label for="editLocation">
-                Location
-            </label>
-
-            <input
-                type="text"
-                id="editLocation"
-                name="location"
-            >
-
-            <button
-                type="submit"
-                class="warning"
-            >
-                Save Changes
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- SEARCH INVENTORY -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Search Inventory</h2>
-
-        <form action="/search" method="GET">
-
-            <input
-                type="text"
-                name="q"
-                placeholder="Search item or location..."
-                value="{{ search_query|default('') }}"
-            >
-
-            <button
-                type="submit"
-                class="secondary"
-            >
-                Search
-            </button>
-
-        </form>
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- LOW STOCK -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Low Stock</h2>
-
-        {% if low_stock_items %}
-
-            <table>
-
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Minimum</th>
-                    <th>Location</th>
-                </tr>
-
-                {% for item_name, item in low_stock_items.items() %}
-
-                    <tr class="low-stock">
-
-                        <td>{{ item_name }}</td>
-                        <td>{{ item.quantity }}</td>
-                        <td>{{ item.minimum_stock }}</td>
-                        <td>{{ item.location }}</td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        {% else %}
-
-            <p class="empty">
-                No low-stock items.
-            </p>
-
-        {% endif %}
-
-    </div>
-
-
-
-
-    <!-- ================================================= -->
-    <!-- LOCATIONS -->
-    <!-- ================================================= -->
-
-    {% if locations %}
-
-    <div class="card">
-
-        <h2>Locations</h2>
-
-        {% for location, items in locations.items() %}
-
-            <div class="location-group">
-
-                <h3>{{ location }}</h3>
-
-                <ul>
-
-                    {% for item_name, item in items %}
-
-                        <li>
-                            {{ item_name }}
-                            — {{ item.quantity }}
-                        </li>
-
-                    {% endfor %}
-
-                </ul>
-
-            </div>
-
-        {% endfor %}
-
-    </div>
-
-    {% endif %}
-
-
-    <!-- ================================================= -->
-    <!-- USAGE REPORT -->
-    <!-- ================================================= -->
-
-    {% if show_usage_report %}
-
-    <div class="card">
-
-        <h2>Usage Report</h2>
-
-        {% if usage_log %}
-
-            <table>
-
-                <tr>
-                    <th>Item</th>
-                    <th>Quantity Used</th>
-                    <th>Date</th>
-                </tr>
-
-                {% for entry in usage_log %}
-
-                    <tr>
-
-                        <td>{{ entry.item }}</td>
-                        <td>{{ entry.quantity }}</td>
-                        <td>{{ entry.date }}</td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        {% else %}
-
-            <p class="empty">
-                No usage recorded.
-            </p>
-
-        {% endif %}
-
-    </div>
-
-    {% endif %}
-
-
-    <!-- ================================================= -->
-    <!-- MONTHLY REPORT -->
-    <!-- ================================================= -->
-
-    {% if monthly_totals is defined %}
-
-    <div class="card">
-
-        <h2>Monthly Report</h2>
-
-        {% if monthly_totals %}
-
-            <table>
-
-                <tr>
-                    <th>Item</th>
-                    <th>Total Used</th>
-                </tr>
-
-                {% for item, quantity in monthly_totals.items() %}
-
-                    <tr>
-
-                        <td>{{ item }}</td>
-                        <td>{{ quantity }}</td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        {% else %}
-
-            <p class="empty">
-                No usage recorded for this period.
-            </p>
-
-        {% endif %}
-
-    </div>
-
-    {% endif %}
-
-
-    <!-- ================================================= -->
-    <!-- INVENTORY -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Inventory</h2>
-
-        {% if inventory %}
-
-            <table>
-
-                <tr>
-                    <th>Site</th>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Minimum</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Action</th>
-                </tr>
-
-                {% for item_name, item in inventory.items() %}
-
-                    <tr
-                        {% if item.quantity <= item.minimum_stock %}
-                            class="low-stock"
-                        {% endif %}
-                    >
-                        <td>{{ item.site }}</td>
-
-                        <td>{{ item_name }}</td>
-
-                        <td>{{ item.quantity }}</td>
-
-                        <td>{{ item.minimum_stock }}</td>
-
-                        <td>{{ item.category }}</td>
-
-                        <td>{{ item.location }}</td>
-
-                        <td>
-
-                            <form
-                                action="/delete"
-                                method="POST"
-                                onsubmit="return confirm('Delete this item?');"
-                            >
-
-                                <input
-                                    type="hidden"
-                                    name="deleteItem"
-                                    value="{{ item_name }}"
-
-                                <input
-                                    type="hidden"
-                                    name="deleteSite"
-                                    value="{{ item.site }}"
->    
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="danger"
-                                >
-                                    Delete
-                                </button>
-
-                            </form>
-
-                        </td>
-
-                    </tr>
-
-                {% endfor %}
-
-            </table>
-
-        {% else %}
-
-            <p class="empty">
-                No inventory items found.
-            </p>
-
-        {% endif %}
-
-    </div>
-
-
-    <!-- ================================================= -->
-    <!-- TOOLS -->
-    <!-- ================================================= -->
-
-    <div class="card">
-
-        <h2>Tools</h2>
-
-        <a href="/">
-            <button type="button" class="secondary">
-                Inventory
-            </button>
-        </a>
-
-        <a href="/low-stock">
-            <button type="button" class="warning">
-                Low Stock
-            </button>
-        </a>
-
-        <a href="/locations">
-            <button type="button" class="secondary">
-                Locations
-            </button>
-        </a>
-
-        <a href="/usage-report">
-            <button type="button" class="secondary">
-                Usage Report
-            </button>
-        </a>
-
-        <a href="/monthly-report">
-            <button type="button" class="secondary">
-                Monthly Report
-            </button>
-        </a>
-
-        <a href="/export-csv">
-            <button type="button" class="primary">
-                Export CSV
-            </button>
-        </a>
-
-    </div>
+<!-- ================================================= -->
+<!-- USE ITEM -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Use Item</h2>
+
+    <form action="/use" method="POST">
+
+        <label for="useSearch">
+            Search for Item
+        </label>
+
+        <input
+            type="text"
+            id="useSearch"
+            placeholder="Start typing an item name..."
+            autocomplete="off"
+        >
+
+        <div
+            id="useResults"
+            class="search-results"
+        ></div>
+
+        <input
+            type="hidden"
+            id="useItem"
+            name="useItem"
+            required
+        >
+
+        <label for="useQuantity">
+            Quantity Used
+        </label>
+
+        <input
+            type="number"
+            id="useQuantity"
+            name="useQuantity"
+            min="1"
+            required
+        >
+
+        <button
+            type="submit"
+            class="danger"
+        >
+            Use Item
+        </button>
+
+    </form>
 
 </div>
 
 
+<!-- ================================================= -->
+<!-- ADD STOCK -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Add Stock</h2>
+
+    <form action="/add-stock" method="POST">
+
+        <label for="stockSearch">
+            Search for Item
+        </label>
+
+        <input
+            type="text"
+            id="stockSearch"
+            placeholder="Start typing an item name..."
+            autocomplete="off"
+        >
+
+        <div
+            id="stockResults"
+            class="search-results"
+        ></div>
+
+        <input
+            type="hidden"
+            id="stockItem"
+            name="stockItem"
+            required
+        >
+
+        <label for="stockQuantity">
+            Quantity to Add
+        </label>
+
+        <input
+            type="number"
+            id="stockQuantity"
+            name="stockQuantity"
+            min="1"
+            required
+        >
+
+        <button
+            type="submit"
+            class="primary"
+        >
+            Add Stock
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- EDIT ITEM -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Edit Item</h2>
+
+    <form action="/edit-item" method="POST">
+
+        <label for="editSearch">
+            Search for Item
+        </label>
+
+        <input
+            type="text"
+            id="editSearch"
+            placeholder="Start typing an item name..."
+            autocomplete="off"
+        >
+
+        <div
+            id="editResults"
+            class="search-results"
+        ></div>
+
+        <input
+            type="hidden"
+            id="originalName"
+            name="originalName"
+            required
+        >
+
+        <label for="editItemName">
+            Item Name
+        </label>
+
+        <input
+            type="text"
+            id="editItemName"
+            name="itemName"
+            required
+        >
+
+        <label for="editQuantity">
+            Quantity
+        </label>
+
+        <input
+            type="number"
+            id="editQuantity"
+            name="quantity"
+            min="0"
+            required
+        >
+
+        <label for="editMinimumStock">
+            Minimum Stock
+        </label>
+
+        <input
+            type="number"
+            id="editMinimumStock"
+            name="minimumStock"
+            min="0"
+            required
+        >
+
+        <label for="editCategory">
+            Category
+        </label>
+
+        <input
+            type="text"
+            id="editCategory"
+            name="category"
+        >
+
+        <label for="editLocation">
+            Location
+        </label>
+
+        <input
+            type="text"
+            id="editLocation"
+            name="location"
+        >
+
+        <button
+            type="submit"
+            class="warning"
+        >
+            Save Changes
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- SEARCH INVENTORY -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Search Inventory</h2>
+
+    <form action="/search" method="GET">
+
+        <input
+            type="text"
+            name="q"
+            placeholder="Search item or location..."
+            value="{{ search_query|default('') }}"
+        >
+
+        <button
+            type="submit"
+            class="secondary"
+        >
+            Search
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- LOW STOCK -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Low Stock</h2>
+
+    {% if low_stock_items %}
+
+        <table>
+
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Minimum</th>
+                <th>Location</th>
+            </tr>
+
+            {% for item_name, item in low_stock_items.items() %}
+
+                <tr class="low-stock">
+
+                    <td>{{ item_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.minimum_stock }}</td>
+                    <td>{{ item.location }}</td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% else %}
+
+        <p class="empty">
+            No low-stock items.
+        </p>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- LOCATIONS -->
+<!-- ================================================= -->
+
+{% if locations %}
+
+<div class="card">
+
+    <h2>Locations</h2>
+
+    {% for location, items in locations.items() %}
+
+        <div class="location-group">
+
+            <h3>{{ location }}</h3>
+
+            <ul>
+
+                {% for item_name, item in items %}
+
+                    <li>
+                        {{ item_name }}
+                        — {{ item.quantity }}
+                    </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+
+<!-- ================================================= -->
+<!-- USAGE REPORT -->
+<!-- ================================================= -->
+
+{% if show_usage_report %}
+
+<div class="card">
+
+    <h2>Usage Report</h2>
+
+    {% if usage_log %}
+
+        <table>
+
+            <tr>
+                <th>Item</th>
+                <th>Quantity Used</th>
+                <th>Date</th>
+            </tr>
+
+            {% for entry in usage_log %}
+
+                <tr>
+
+                    <td>{{ entry.item }}</td>
+                    <td>{{ entry.quantity }}</td>
+                    <td>{{ entry.date }}</td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% else %}
+
+        <p class="empty">
+            No usage recorded.
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+
+<!-- ================================================= -->
+<!-- MONTHLY REPORT -->
+<!-- ================================================= -->
+
+{% if monthly_totals is defined %}
+
+<div class="card">
+
+    <h2>Monthly Report</h2>
+
+    {% if monthly_totals %}
+
+        <table>
+
+            <tr>
+                <th>Item</th>
+                <th>Total Used</th>
+            </tr>
+
+            {% for item, quantity in monthly_totals.items() %}
+
+                <tr>
+
+                    <td>{{ item }}</td>
+                    <td>{{ quantity }}</td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% else %}
+
+        <p class="empty">
+            No usage recorded for this period.
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+
+<!-- ================================================= -->
+<!-- INVENTORY -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Inventory</h2>
+
+    {% if inventory %}
+
+        <table>
+
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Minimum</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Action</th>
+            </tr>
+
+            {% for item_name, item in inventory.items() %}
+
+                <tr
+                    {% if item.quantity <= item.minimum_stock %}
+                        class="low-stock"
+                    {% endif %}
+                >
+
+                    <td>{{ item_name }}</td>
+
+                    <td>{{ item.quantity }}</td>
+
+                    <td>{{ item.minimum_stock }}</td>
+
+                    <td>{{ item.category }}</td>
+
+                    <td>{{ item.location }}</td>
+
+                    <td>
+
+                        <form
+                            action="/delete"
+                            method="POST"
+                            onsubmit="return confirm('Delete this item?');"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="deleteItem"
+                                value="{{ item_name }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="danger"
+                            >
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </table>
+
+    {% else %}
+
+        <p class="empty">
+            No inventory items found.
+        </p>
+
+    {% endif %}
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- TOOLS -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Tools</h2>
+
+    <a href="/">
+        <button type="button" class="secondary">
+            Inventory
+        </button>
+    </a>
+
+    <a href="/low-stock">
+        <button type="button" class="warning">
+            Low Stock
+        </button>
+    </a>
+
+    <a href="/locations">
+        <button type="button" class="secondary">
+            Locations
+        </button>
+    </a>
+
+    <a href="/usage-report">
+        <button type="button" class="secondary">
+            Usage Report
+        </button>
+    </a>
+
+    <a href="/monthly-report">
+        <button type="button" class="secondary">
+            Monthly Report
+        </button>
+    </a>
+
+    <a href="/export-csv">
+        <button type="button" class="primary">
+            Export CSV
+        </button>
+    </a>
+
+</div>
+</div>
 <!-- ===================================================== -->
 <!-- SEARCH JAVASCRIPT -->
 <!-- ===================================================== -->
-
 <script>
 
     // =====================================================
@@ -1352,6 +1170,5 @@
     }
 
 </script>
-
 </body>
 </html>
