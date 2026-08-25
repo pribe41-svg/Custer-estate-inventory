@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 
 # ============================================================
-# LOAD INVENTORY FROM DATABASE
+# LOAD INVENTORY
 # ============================================================
 
 def load_inventory_from_database():
@@ -20,13 +20,12 @@ def load_inventory_from_database():
     cursor.execute("""
         SELECT
             name,
-            site,
             quantity,
             minimum_stock,
             category,
             location
         FROM inventory
-        ORDER BY site, name
+        ORDER BY name
     """)
 
     rows = cursor.fetchall()
@@ -37,23 +36,18 @@ def load_inventory_from_database():
 
         if using_postgres():
 
-            name, site, quantity, minimum_stock, category, location = row
+            name, quantity, minimum_stock, category, location = row
 
         else:
 
             name = row["name"]
-            site = row["site"]
             quantity = row["quantity"]
             minimum_stock = row["minimum_stock"]
             category = row["category"]
             location = row["location"]
 
-        # Use site + name so identical items can exist
-        # at different sites.
-
-        inventory[(site, name)] = {
+        inventory[name] = {
             "name": name,
-            "site": site,
             "quantity": quantity,
             "minimum_stock": minimum_stock,
             "category": category,
@@ -67,7 +61,7 @@ def load_inventory_from_database():
 
 
 # ============================================================
-# DASHBOARD TOTALS
+# DASHBOARD
 # ============================================================
 
 def calculate_dashboard(inventory):
@@ -115,48 +109,18 @@ def home():
         out_of_stock_count
     ) = calculate_dashboard(inventory)
 
-    selected_site = request.args.get("site", "")
-
-    sites = sorted(
-    set(
-        item["site"]
-        for item in inventory.values()
-    )
-    | {
-        "Custer Estates",
-        "Culver Estates"
-    }
-)
-
-    if selected_site:
-
-        inventory = {
-            key: item
-            for key, item in inventory.items()
-            if item["site"] == selected_site
-        }
-
-        (
-            total_items,
-            total_quantity,
-            low_stock_count,
-            out_of_stock_count
-        ) = calculate_dashboard(inventory)
-
     return render_template(
         "index.html",
         inventory=inventory,
         total_items=total_items,
         total_quantity=total_quantity,
         low_stock_count=low_stock_count,
-        out_of_stock_count=out_of_stock_count,
-        sites=sites,
-        selected_site=selected_site
+        out_of_stock_count=out_of_stock_count
     )
 
 
 # ============================================================
-# DATABASE DIAGNOSTIC
+# DATABASE CHECK
 # ============================================================
 
 @app.route("/database-check")
@@ -171,7 +135,7 @@ def database_check():
         else "SQLite"
     )
 
-    database_name = "Unknown"
+    database_name = "inventory.db"
 
     if using_postgres():
 
@@ -183,10 +147,6 @@ def database_check():
 
         if row:
             database_name = row[0]
-
-    else:
-
-        database_name = "inventory.db"
 
     cursor.close()
     connection.close()
@@ -218,11 +178,7 @@ def database_check():
 @app.route("/add", methods=["POST"])
 def add_item():
 
-    item_name = request.form["itemName"]
-    site = request.form.get(
-        "site",
-        "Unassigned"
-    ).strip()
+    item_name = request.form["itemName"].strip()
 
     quantity = int(
         request.form["quantity"]
@@ -235,55 +191,65 @@ def add_item():
     category = request.form.get(
         "category",
         ""
-    )
+    ).strip()
 
     location = request.form.get(
         "location",
         ""
-    )
-
-    if not site:
-        site = "Unassigned"
+    ).strip()
 
     connection = get_connection()
     cursor = connection.cursor()
 
-    if using_postgres():
+    placeholder = (
+        "%s"
+        if using_postgres()
+        else "?"
+    )
 
+    # Check whether the item already exists.
+    cursor.execute(
+        f"""
+        SELECT name
+        FROM inventory
+        WHERE name = {placeholder}
+        """,
+        (item_name,)
+    )
+
+    existing_item = cursor.fetchone()
+
+    if existing_item:
+
+        # Update existing item.
         cursor.execute(
-            """
-            INSERT INTO inventory
-            (
-                name,
-                site,
-                quantity,
-                minimum_stock,
-                category,
-                location
-            )
-            VALUES (%s, %s, %s, %s, %s, %s)
-
-            ON CONFLICT (name, site)
-            DO UPDATE SET
-                quantity = EXCLUDED.quantity,
-                minimum_stock = EXCLUDED.minimum_stock,
-                category = EXCLUDED.category,
-                location = EXCLUDED.location
+            f"""
+            UPDATE inventory
+            SET
+                quantity = {placeholder},
+                minimum_stock = {placeholder},
+                category = {placeholder},
+                location = {placeholder}
+            WHERE name = {placeholder}
             """,
             (
-                item_name,
-                site,
                 quantity,
                 minimum_stock,
                 category,
-                location
+                location,
+                item_name
             )
         )
 
     else:
 
+        # Insert new item.
+        #
+        # The old site column is still present in the
+        # existing database, so we give it an internal value.
+        # Users never see or select a site.
         cursor.execute(
-            """
+            f"""
             INSERT INTO inventory
             (
                 name,
@@ -293,11 +259,18 @@ def add_item():
                 category,
                 location
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (
+                {placeholder},
+                {placeholder},
+                {placeholder},
+                {placeholder},
+                {placeholder},
+                {placeholder}
+            )
             """,
             (
                 item_name,
-                site,
+                "Custer Estate",
                 quantity,
                 minimum_stock,
                 category,
@@ -321,10 +294,6 @@ def add_item():
 def add_stock():
 
     item_name = request.form["stockItem"]
-    site = request.form.get(
-        "stockSite",
-        "Unassigned"
-    )
 
     quantity_added = int(
         request.form["stockQuantity"]
@@ -344,12 +313,8 @@ def add_stock():
         SELECT quantity
         FROM inventory
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
-        (
-            item_name,
-            site
-        )
+        (item_name,)
     )
 
     item = cursor.fetchone()
@@ -379,12 +344,10 @@ def add_stock():
         UPDATE inventory
         SET quantity = {placeholder}
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
         (
             new_quantity,
-            item_name,
-            site
+            item_name
         )
     )
 
@@ -405,11 +368,6 @@ def use_item():
 
     item_name = request.form["useItem"]
 
-    site = request.form.get(
-        "useSite",
-        "Unassigned"
-    )
-
     quantity_used = int(
         request.form["useQuantity"]
     )
@@ -428,12 +386,8 @@ def use_item():
         SELECT quantity
         FROM inventory
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
-        (
-            item_name,
-            site
-        )
+        (item_name,)
     )
 
     item = cursor.fetchone()
@@ -474,12 +428,10 @@ def use_item():
         UPDATE inventory
         SET quantity = {placeholder}
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
         (
             new_quantity,
-            item_name,
-            site
+            item_name
         )
     )
 
@@ -500,9 +452,7 @@ def use_item():
         (
             item_name,
             quantity_used,
-            datetime.now().strftime(
-                "%Y-%m-%d"
-            )
+            datetime.now().strftime("%Y-%m-%d")
         )
     )
 
@@ -523,33 +473,13 @@ def low_stock():
 
     inventory = load_inventory_from_database()
 
-    selected_site = request.args.get(
-        "site",
-        ""
-    )
-
-    if selected_site:
-
-        inventory = {
-            key: item
-            for key, item in inventory.items()
-            if item["site"] == selected_site
-        }
-
     low_stock_items = {}
 
-    for key, item in inventory.items():
+    for name, item in inventory.items():
 
         if item["quantity"] <= item["minimum_stock"]:
 
-            low_stock_items[key] = item
-
-    sites = sorted(
-        set(
-            item["site"]
-            for item in load_inventory_from_database().values()
-        )
-    )
+            low_stock_items[name] = item
 
     (
         total_items,
@@ -562,8 +492,6 @@ def low_stock():
         "index.html",
         inventory=inventory,
         low_stock_items=low_stock_items,
-        sites=sites,
-        selected_site=selected_site,
         total_items=total_items,
         total_quantity=total_quantity,
         low_stock_count=low_stock_count,
@@ -583,11 +511,6 @@ def search_inventory():
         ""
     ).strip().lower()
 
-    selected_site = request.args.get(
-        "site",
-        ""
-    )
-
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -601,69 +524,28 @@ def search_inventory():
 
     if query:
 
-        search_pattern = (
-            f"%{query}%"
+        search_pattern = f"%{query}%"
+
+        cursor.execute(
+            f"""
+            SELECT
+                name,
+                quantity,
+                minimum_stock,
+                category,
+                location
+            FROM inventory
+            WHERE
+                LOWER(name) LIKE {placeholder}
+                OR
+                LOWER(location) LIKE {placeholder}
+            ORDER BY name
+            """,
+            (
+                search_pattern,
+                search_pattern
+            )
         )
-
-        if selected_site:
-
-            cursor.execute(
-                f"""
-                SELECT
-                    name,
-                    site,
-                    quantity,
-                    minimum_stock,
-                    category,
-                    location
-                FROM inventory
-                WHERE (
-                    LOWER(name)
-                    LIKE {placeholder}
-
-                    OR
-
-                    LOWER(location)
-                    LIKE {placeholder}
-                )
-                AND site = {placeholder}
-                ORDER BY name
-                """,
-                (
-                    search_pattern,
-                    search_pattern,
-                    selected_site
-                )
-            )
-
-        else:
-
-            cursor.execute(
-                f"""
-                SELECT
-                    name,
-                    site,
-                    quantity,
-                    minimum_stock,
-                    category,
-                    location
-                FROM inventory
-                WHERE
-                    LOWER(name)
-                    LIKE {placeholder}
-
-                    OR
-
-                    LOWER(location)
-                    LIKE {placeholder}
-
-                ORDER BY site, name
-                """,
-                (
-                    search_pattern,
-                    search_pattern
-                )
-            )
 
         rows = cursor.fetchall()
 
@@ -673,7 +555,6 @@ def search_inventory():
 
                 (
                     name,
-                    site,
                     quantity,
                     minimum_stock,
                     category,
@@ -683,17 +564,13 @@ def search_inventory():
             else:
 
                 name = row["name"]
-                site = row["site"]
                 quantity = row["quantity"]
                 minimum_stock = row["minimum_stock"]
                 category = row["category"]
                 location = row["location"]
 
-            search_results[
-                (site, name)
-            ] = {
+            search_results[name] = {
                 "name": name,
-                "site": site,
                 "quantity": quantity,
                 "minimum_stock": minimum_stock,
                 "category": category,
@@ -704,21 +581,6 @@ def search_inventory():
     connection.close()
 
     inventory = load_inventory_from_database()
-
-    if selected_site:
-
-        inventory = {
-            key: item
-            for key, item in inventory.items()
-            if item["site"] == selected_site
-        }
-
-    sites = sorted(
-        set(
-            item["site"]
-            for item in load_inventory_from_database().values()
-        )
-    )
 
     (
         total_items,
@@ -732,8 +594,6 @@ def search_inventory():
         inventory=inventory,
         search_results=search_results,
         search_query=query,
-        sites=sites,
-        selected_site=selected_site,
         total_items=total_items,
         total_quantity=total_quantity,
         low_stock_count=low_stock_count,
@@ -750,19 +610,6 @@ def view_locations():
 
     inventory = load_inventory_from_database()
 
-    selected_site = request.args.get(
-        "site",
-        ""
-    )
-
-    if selected_site:
-
-        inventory = {
-            key: item
-            for key, item in inventory.items()
-            if item["site"] == selected_site
-        }
-
     locations = {}
 
     for item in inventory.values():
@@ -770,7 +617,6 @@ def view_locations():
         location = item["location"]
 
         if location not in locations:
-
             locations[location] = []
 
         locations[location].append(
@@ -780,19 +626,10 @@ def view_locations():
             )
         )
 
-    sites = sorted(
-        set(
-            item["site"]
-            for item in load_inventory_from_database().values()
-        )
-    )
-
     return render_template(
         "index.html",
         inventory=inventory,
-        locations=locations,
-        sites=sites,
-        selected_site=selected_site
+        locations=locations
     )
 
 
@@ -806,16 +643,14 @@ def usage_report():
     connection = get_connection()
     cursor = connection.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT
             item_name,
             amount,
             date
         FROM usage_log
         ORDER BY date DESC
-        """
-    )
+    """)
 
     rows = cursor.fetchall()
 
@@ -859,9 +694,7 @@ def usage_report():
 @app.route("/monthly-report")
 def monthly_report():
 
-    month = request.args.get(
-        "month"
-    )
+    month = request.args.get("month")
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -884,23 +717,19 @@ def monthly_report():
             GROUP BY item_name
             ORDER BY item_name
             """,
-            (
-                month + "%",
-            )
+            (month + "%",)
         )
 
     else:
 
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT
                 item_name,
                 SUM(amount) AS total_used
             FROM usage_log
             GROUP BY item_name
             ORDER BY item_name
-            """
-        )
+        """)
 
     rows = cursor.fetchall()
 
@@ -911,12 +740,7 @@ def monthly_report():
 
     for row in rows:
 
-        item_name = row[0]
-        total_used = row[1]
-
-        monthly_totals[item_name] = (
-            total_used
-        )
+        monthly_totals[row[0]] = row[1]
 
     inventory = load_inventory_from_database()
 
@@ -926,6 +750,7 @@ def monthly_report():
         monthly_totals=monthly_totals,
         selected_month=month
     )
+
 
 # ============================================================
 # EDIT ITEM
@@ -938,11 +763,6 @@ def edit_item():
 
     new_name = request.form["itemName"]
 
-    site = request.form.get(
-        "site",
-        "Unassigned"
-    ).strip()
-
     quantity = int(
         request.form["quantity"]
     )
@@ -954,15 +774,12 @@ def edit_item():
     category = request.form.get(
         "category",
         ""
-    )
+    ).strip()
 
     location = request.form.get(
         "location",
         ""
-    )
-
-    if not site:
-        site = "Unassigned"
+    ).strip()
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -983,7 +800,6 @@ def edit_item():
             category = {placeholder},
             location = {placeholder}
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
         (
             new_name,
@@ -991,8 +807,7 @@ def edit_item():
             minimum_stock,
             category,
             location,
-            original_name,
-            site
+            original_name
         )
     )
 
@@ -1011,14 +826,7 @@ def edit_item():
 @app.route("/delete", methods=["POST"])
 def delete_item():
 
-    item_name = request.form[
-        "deleteItem"
-    ]
-
-    site = request.form.get(
-        "deleteSite",
-        "Unassigned"
-    )
+    item_name = request.form["deleteItem"]
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -1033,12 +841,8 @@ def delete_item():
         f"""
         DELETE FROM inventory
         WHERE name = {placeholder}
-        AND site = {placeholder}
         """,
-        (
-            item_name,
-            site
-        )
+        (item_name,)
     )
 
     connection.commit()
@@ -1058,9 +862,7 @@ def export_csv():
 
     inventory = load_inventory_from_database()
 
-    filename = (
-        "inventory_export.csv"
-    )
+    filename = "inventory_export.csv"
 
     with open(
         filename,
@@ -1071,7 +873,6 @@ def export_csv():
         writer = csv.writer(file)
 
         writer.writerow([
-            "Site",
             "Item",
             "Quantity",
             "Minimum Stock",
@@ -1082,7 +883,6 @@ def export_csv():
         for item in inventory.values():
 
             writer.writerow([
-                item["site"],
                 item["name"],
                 item["quantity"],
                 item["minimum_stock"],
