@@ -220,6 +220,53 @@
 
 </div>
 
+<!-- ================================================= -->
+<!-- TOOLS -->
+<!-- ================================================= -->
+
+<div class="card">
+
+    <h2>Tools</h2>
+
+    <a href="/">
+        <button type="button" class="secondary">
+            Inventory
+        </button>
+    </a>
+
+    <a href="/low-stock">
+        <button type="button" class="warning">
+            Low Stock
+        </button>
+    </a>
+
+    <a href="/locations">
+        <button type="button" class="secondary">
+            Locations
+        </button>
+    </a>
+
+    <a href="/usage-report">
+        <button type="button" class="secondary">
+            Usage Report
+        </button>
+    </a>
+
+    <a href="/monthly-report">
+        <button type="button" class="secondary">
+            Monthly Report
+        </button>
+    </a>
+
+    <a href="/export-csv">
+        <button type="button" class="primary">
+            Export CSV
+        </button>
+    </a>
+
+</div>
+</div>
+
 
 <!-- ================================================= -->
 <!-- ADD ITEM -->
@@ -712,79 +759,90 @@
 
 <div class="card">
 
-    <h2>Inventory</h2>
+    <details>
 
-    {% if inventory %}
+        <summary style="cursor: pointer; font-size: 20px; font-weight: bold;">
+            Inventory
+        </summary>
 
-        <table>
+        <div style="margin-top: 15px;">
 
-            <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Minimum</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Action</th>
-            </tr>
+            {% if inventory %}
 
-            {% for item_name, item in inventory.items() %}
+                <table>
 
-                <tr
-                    {% if item.quantity <= item.minimum_stock %}
-                        class="low-stock"
-                    {% endif %}
-                >
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Minimum</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
 
-                    <td>{{ item_name }}</td>
+                    {% for item_name, item in inventory.items() %}
 
-                    <td>{{ item.quantity }}</td>
-
-                    <td>{{ item.minimum_stock }}</td>
-
-                    <td>{{ item.category }}</td>
-
-                    <td>{{ item.location }}</td>
-
-                    <td>
-
-                        <form
-                            action="/delete"
-                            method="POST"
-                            onsubmit="return confirm('Delete this item?');"
+                        <tr
+                            {% if item.quantity <= item.minimum_stock %}
+                                class="low-stock"
+                            {% endif %}
                         >
 
-                            <input
-                                type="hidden"
-                                name="deleteItem"
-                                value="{{ item_name }}"
-                            >
+                            <td>{{ item_name }}</td>
 
-                            <button
-                                type="submit"
-                                class="danger"
-                            >
-                                Delete
-                            </button>
+                            <td>{{ item.quantity }}</td>
 
-                        </form>
+                            <td>{{ item.minimum_stock }}</td>
 
-                    </td>
+                            <td>{{ item.category }}</td>
 
-                </tr>
+                            <td>{{ item.location }}</td>
 
-            {% endfor %}
+                            <td>
 
-        </table>
+                                <form
+                                    action="/delete"
+                                    method="POST"
+                                    onsubmit="return confirm('Delete this item?');"
+                                >
 
-    {% else %}
+                                    <input
+                                        type="hidden"
+                                        name="deleteItem"
+                                        value="{{ item_name }}"
+                                    >
 
-        <p class="empty">
-            No inventory items found.
-        </p>
+                                    <button
+                                        type="submit"
+                                        class="danger"
+                                    >
+                                        Delete
+                                    </button>
 
-    {% endif %}
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </table>
+
+            {% else %}
+
+                <p class="empty">
+                    No inventory items found.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </details>
 
 </div>
+
 
 
 <!-- ================================================= -->
