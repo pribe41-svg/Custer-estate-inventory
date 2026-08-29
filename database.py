@@ -3,261 +3,192 @@ import sqlite3
 import psycopg2
 
 
+# ============================================================
+# DATABASE CONNECTION
+# ============================================================
+
 def get_connection():
+
     database_url = os.environ.get("DATABASE_URL")
 
     if database_url:
-        return psycopg2.connect(database_url)
 
-    connection = sqlite3.connect("inventory.db")
+        return psycopg2.connect(
+            database_url
+        )
+
+    connection = sqlite3.connect(
+        "inventory.db"
+    )
+
     connection.row_factory = sqlite3.Row
+
     return connection
 
 
-def using_postgres():
-    return bool(os.environ.get("DATABASE_URL"))
+# ============================================================
+# DATABASE TYPE
+# ============================================================
 
+def using_postgres():
+
+    return bool(
+        os.environ.get("DATABASE_URL")
+    )
+
+
+# ============================================================
+# INITIALIZE DATABASE
+# ============================================================
 
 def initialize_database():
 
     connection = get_connection()
     cursor = connection.cursor()
 
-
-    # ========================================================
-    # POSTGRESQL
-    # ========================================================
-
     if using_postgres():
 
-        cursor.execute("""
+        # ----------------------------------------------------
+        # INVENTORY TABLE
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS inventory (
+
                 id SERIAL PRIMARY KEY,
+
                 name TEXT NOT NULL,
-                site TEXT NOT NULL DEFAULT 'Unassigned',
+
+                site TEXT NOT NULL,
+
                 quantity INTEGER NOT NULL,
+
                 minimum_stock INTEGER NOT NULL,
+
                 category TEXT,
+
                 location TEXT,
-                UNIQUE(name, site)
+
+                UNIQUE (name, site)
+
             )
-        """)
+            """
+        )
 
+        # ----------------------------------------------------
+        # USAGE LOG TABLE
+        # ----------------------------------------------------
 
-        # Add site column if this is an older database
-
-        cursor.execute("""
-            ALTER TABLE inventory
-            ADD COLUMN IF NOT EXISTS site TEXT
-            DEFAULT 'Unassigned'
-        """)
-
-
-        cursor.execute("""
-            UPDATE inventory
-            SET site = 'Unassigned'
-            WHERE site IS NULL
-        """)
-
-
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS usage_log (
+
                 id SERIAL PRIMARY KEY,
+
                 item_name TEXT NOT NULL,
+
                 amount INTEGER NOT NULL,
+
                 date TEXT NOT NULL
+
             )
-        """)
+            """
+        )
 
+        # ----------------------------------------------------
+        # RECEIVING TABLE
+        # ----------------------------------------------------
 
-    # ========================================================
-    # SQLITE
-    # ========================================================
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS receiving (
+
+                id SERIAL PRIMARY KEY,
+
+                item_name TEXT NOT NULL,
+
+                quantity INTEGER NOT NULL,
+
+                date TEXT NOT NULL,
+
+                stocked_at TEXT NOT NULL
+
+            )
+            """
+        )
 
     else:
 
-        cursor.execute("""
+        # ----------------------------------------------------
+        # SQLITE INVENTORY TABLE
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS inventory (
+
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+
                 name TEXT NOT NULL,
-                site TEXT NOT NULL DEFAULT 'Unassigned',
+
+                site TEXT NOT NULL,
+
                 quantity INTEGER NOT NULL,
+
                 minimum_stock INTEGER NOT NULL,
+
                 category TEXT,
-                location TEXT
-            )
-        """)
 
-
-        # Check whether the existing SQLite table has a site column
-
-        cursor.execute("""
-            PRAGMA table_info(inventory)
-        """)
-
-        columns = [
-            row["name"]
-            for row in cursor.fetchall()
-        ]
-
-
-        if "site" not in columns:
-
-            cursor.execute("""
-                ALTER TABLE inventory
-                ADD COLUMN site TEXT DEFAULT 'Unassigned'
-            """)
-
-
-        cursor.execute("""
-            UPDATE inventory
-            SET site = 'Unassigned'
-            WHERE site IS NULL
-        """)
-
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usage_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                item_name TEXT NOT NULL,
-                amount INTEGER NOT NULL,
-                date TEXT NOT NULL
-            )
-        """)
-
-
-    connection.commit()
-
-    cursor.close()
-    connection.close()
-
-    import os
-import sqlite3
-import psycopg2
-
-
-def get_connection():
-    database_url = os.environ.get("DATABASE_URL")
-
-    if database_url:
-        return psycopg2.connect(database_url)
-
-    connection = sqlite3.connect("inventory.db")
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def using_postgres():
-    return bool(os.environ.get("DATABASE_URL"))
-
-
-def initialize_database():
-
-    connection = get_connection()
-    cursor = connection.cursor()
-
-
-    # ========================================================
-    # POSTGRESQL
-    # ========================================================
-
-    if using_postgres():
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS inventory (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                site TEXT NOT NULL DEFAULT 'Unassigned',
-                quantity INTEGER NOT NULL,
-                minimum_stock INTEGER NOT NULL,
-                category TEXT,
                 location TEXT,
-                UNIQUE(name, site)
+
+                UNIQUE (name, site)
+
             )
-        """)
+            """
+        )
 
+        # ----------------------------------------------------
+        # SQLITE USAGE LOG TABLE
+        # ----------------------------------------------------
 
-        # Add site column if this is an older database
-
-        cursor.execute("""
-            ALTER TABLE inventory
-            ADD COLUMN IF NOT EXISTS site TEXT
-            DEFAULT 'Unassigned'
-        """)
-
-
-        cursor.execute("""
-            UPDATE inventory
-            SET site = 'Unassigned'
-            WHERE site IS NULL
-        """)
-
-
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS usage_log (
-                id SERIAL PRIMARY KEY,
-                item_name TEXT NOT NULL,
-                amount INTEGER NOT NULL,
-                date TEXT NOT NULL
-            )
-        """)
 
-
-    # ========================================================
-    # SQLITE
-    # ========================================================
-
-    else:
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS inventory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                site TEXT NOT NULL DEFAULT 'Unassigned',
+
+                item_name TEXT NOT NULL,
+
+                amount INTEGER NOT NULL,
+
+                date TEXT NOT NULL
+
+            )
+            """
+        )
+
+        # ----------------------------------------------------
+        # SQLITE RECEIVING TABLE
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS receiving (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                item_name TEXT NOT NULL,
+
                 quantity INTEGER NOT NULL,
-                minimum_stock INTEGER NOT NULL,
-                category TEXT,
-                location TEXT
+
+                date TEXT NOT NULL,
+
+                stocked_at TEXT NOT NULL
+
             )
-        """)
-
-
-        # Check whether the existing SQLite table has a site column
-
-        cursor.execute("""
-            PRAGMA table_info(inventory)
-        """)
-
-        columns = [
-            row["name"]
-            for row in cursor.fetchall()
-        ]
-
-
-        if "site" not in columns:
-
-            cursor.execute("""
-                ALTER TABLE inventory
-                ADD COLUMN site TEXT DEFAULT 'Unassigned'
-            """)
-
-
-        cursor.execute("""
-            UPDATE inventory
-            SET site = 'Unassigned'
-            WHERE site IS NULL
-        """)
-
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usage_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                item_name TEXT NOT NULL,
-                amount INTEGER NOT NULL,
-                date TEXT NOT NULL
-            )
-        """)
-
+            """
+        )
 
     connection.commit()
 
@@ -265,19 +196,22 @@ def initialize_database():
     connection.close()
 
 
+# ============================================================
+# INITIALIZE DATABASE WHEN APP STARTS
+# ============================================================
+
+initialize_database()
+
+
+# ============================================================
+# DIRECT DATABASE TEST
+# ============================================================
+
 if __name__ == "__main__":
 
     initialize_database()
 
-    print("Database initialized successfully.")
-
-  
-
-
-if __name__ == "__main__":
-
-    initialize_database()
-
-    print("Database initialized successfully.")
-
+    print(
+        "Database initialized successfully."
+    )
     

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Receiving Report</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .empty {
+            color: #777;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #777;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th,
+            td {
+                padding: 7px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <a
+        href="/"
+        class="back-button"
+    >
+        ← Back to Inventory
+    </a>
+
+    <div class="card">
+
+        <h1>Receiving Report</h1>
+
+        {% if receiving_records %}
+
+            <table>
+
+                <tr>
+
+                    <th>Item</th>
+
+                    <th>Quantity Received</th>
+
+                    <th>Date Received</th>
+
+                    <th>Stocked At</th>
+
+                </tr>
+
+                {% for record in receiving_records %}
+
+                    <tr>
+
+                        <td>
+                            {{ record.item_name }}
+                        </td>
+
+                        <td>
+                            {{ record.quantity }}
+                        </td>
+
+                        <td>
+                            {{ record.date }}
+                        </td>
+
+                        <td>
+                            {{ record.stocked_at }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </table>
+
+        {% else %}
+
+            <p class="empty">
+                No receiving records found.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
